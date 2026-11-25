@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>桿件重量修改</title>
+  <link rel="stylesheet" href="autocount-theme.css">
+</head>
+<body class="weights-page">
+  <main class="app-shell">
+    <header class="site-header">
+      <a class="brand" href="autoCount(20190904)_優化版.html" aria-label="桿件小幫手，回到配置計算">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M8 6v20M24 6v20M8 9h16M8 23h16M8 9l16 14M24 9 8 23" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span>桿件小幫手</span>
+      </a>
+      <nav class="site-nav" aria-label="主要導覽">
+        <a href="autoCount(20190904)_優化版.html">配置計算</a>
+        <a href="桿件重量修改.html" aria-current="page">單重設定</a>
+      </nav>
+    </header>
+
+    <section class="page-hero editor-hero" aria-labelledby="page-title">
+      <div class="hero-copy">
+        <p class="eyebrow">WEIGHT SETTINGS · 單重設定</p>
+        <h1 id="page-title">每一公斤，<br>都有依據。</h1>
+        <p class="hero-description">整理桿件單重，讓每次估算更順手。<br>修改後儲存，計算頁就能使用新的重量。</p>
+        <div class="hero-badges" aria-label="功能摘要">
+          <span class="badge">20 種桿件</span><span class="badge">kg 單位</span><span class="badge">可離線使用</span>
+        </div>
+      </div>
+      <div class="editor-hero-art" aria-hidden="true">
+        <svg viewBox="0 0 250 190" fill="none">
+          <ellipse cx="127" cy="161" rx="92" ry="14" fill="#dcece4"/>
+          <path d="M128 34v19m-56 18h112M86 71l-25 62h50L86 71Zm81 0-25 62h50l-25-62Z" stroke="#173e40" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M129 54v93m-30 6h60" stroke="#087f74" stroke-width="11" stroke-linecap="round"/>
+          <path d="M60 132c0 13 12 23 26 23s26-10 26-23H60Z" fill="#ffd27a"/>
+          <path d="M141 132c0 13 12 23 26 23s26-10 26-23h-52Z" fill="#8ed9c3"/>
+          <circle cx="128" cy="55" r="10" fill="#ffd27a" stroke="#173e40" stroke-width="4"/>
+          <circle cx="201" cy="37" r="18" fill="#ffd27a"/>
+          <path d="m45 46 4 4m-4 0 4-4M204 92v8m-4-4h8" stroke="#087f74" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </section>
+
+    <section class="surface editor-panel" aria-labelledby="editor-heading">
+      <div class="panel-header">
+        <div><p class="panel-kicker">MATERIAL LIBRARY</p><h2 id="editor-heading">桿件重量資料庫</h2></div>
+        <span class="badge">一次儲存，整份更新</span>
+      </div>
+      <p class="hint">單重請輸入大於 0、最多兩位小數的數字。資料保存在目前瀏覽器，可匯出 JSON 備份。</p>
+      <div class="status-strip"><span class="status-dot" aria-hidden="true"></span><p id="status" role="status">正在載入重量資料庫…</p></div>
+      <p id="error" role="alert" hidden></p>
+    <form id="weights-form">
+      <fieldset id="editor-fields" disabled>
+        <div class="editor-toolbar actions">
+          <button class="button primary" type="submit" data-save>儲存全部重量</button>
+          <button class="button secondary" type="button" id="reload-weights">重新讀取資料庫</button>
+          <button class="button ghost-danger" type="button" id="reset-weights">恢復內建預設值</button>
+        </div>
+        <div class="actions">
+          <button class="button secondary" type="button" id="export-weights">匯出目前重量</button>
+          <button class="button secondary" type="button" id="import-weights">匯入重量備份</button>
+          <input id="import-file" type="file" accept=".json,application/json" hidden>
+        </div>
+        <p class="hint">匯入後先顯示供您檢查，按「儲存全部重量」才會寫入資料庫。黃色列表示與內建預設值不同。</p>
+        <div class="table-scroll">
+        <table class="weights-table">
+          <caption>全部 20 種桿件單重</caption>
+          <thead><tr><th scope="col">桿件型號</th><th scope="col">內建預設（kg）</th><th scope="col">目前單重（kg）</th></tr></thead>
+          <tbody id="weight-rows"></tbody>
+        </table>
+        </div>
+        <div class="editor-footer actions"><p class="hint">調整完成了嗎？儲存後即可回到計算頁。</p><button class="button primary" type="submit" data-save>儲存全部重量</button></div>
+      </fieldset>
+    </form>
+    <noscript><p>請啟用 JavaScript，才能編輯及儲存桿件重量。</p></noscript>
+    </section>
+    <footer class="site-footer"><span>桿件小幫手 · 讓估算更輕鬆</span><a href="autoCount(20190904)_優化版.html">返回配置計算 <span aria-hidden="true">↗</span></a></footer>
+  </main>
+  <script src="material-weights.js"></script>
+  <script>
+(() => {
+  'use strict';
+  const status = document.getElementById('status');
+  const error = document.getElementById('error');
+  const editor = document.getElementById('editor-fields');
+  const rows = document.getElementById('weight-rows');
+  const form = document.getElementById('weights-form');
+  const fileInput = document.getElementById('import-file');
+  const api = window.MaterialWeights;
+  const required = ['validateEntries', 'load', 'save', 'reset', 'parseBackup', 'makeBackup'];
+  if (!api || !Array.isArray(api.defaults) || required.some(name => typeof api[name] !== 'function')) {
+    status.textContent = '無法載入重量修改功能。';
+    error.textContent = '請確認 material-weights.js 與本頁位於同一個資料夾，再重新開啟。';
+    error.hidden = false;
+    return;
+  }
+
+  let busy = false;
+  let hasDatabaseValues = false;
+  let baseline = '';
+  let inputs = [];
+  let channel = null;
+  try {
+    if (typeof BroadcastChannel === 'function') channel = new BroadcastChannel('autocount-material-weights');
+  } catch (_) { /* 計算頁也會在運算時重新讀取資料庫。 */ }
+
+  function signature() {
+    return JSON.stringify(inputs.map(input => input.value.trim() === '' ? '' : Number(input.value)));
+  }
+
+  function isDirty() {
+    return signature() !== baseline;
+  }
+
+  function showError(failure) {
+    error.textContent = failure.message || String(failure);
+    error.hidden = false;
+  }
+
+  function inspect() {
+    let failure = null;
+    const entries = inputs.map((input, index) => {
+      input.setCustomValidity('');
+      const weight = Number(input.value);
+      const valid = input.value.trim() !== '' && Number.isFinite(weight) && weight > 0 && !input.validity.badInput;
+      input.setAttribute('aria-invalid', String(!valid));
+      if (!valid) {
+        input.setCustomValidity('請輸入大於 0、最多兩位小數的單重。');
+        failure = new Error('請修正空白、非數字或小於等於 0 的單重。');
+        failure.field = input;
+      }
+      rows.rows[index].classList.toggle('changed', valid && weight !== api.defaults[index].weight);
+      return {code: api.defaults[index].code, weight};
+    });
+    if (!failure) {
+      try { return {entries: api.validateEntries(entries), failure: null}; }
+      catch (invalid) { failure = invalid; }
+    }
+    return {entries: null, failure};
+  }
+
+  function updateControls() {
+    editor.disabled = busy;
+    const check = inspect();
+    form.querySelectorAll('[data-save]').forEach(button => { button.disabled = busy || Boolean(check.failure); });
+    document.getElementById('export-weights').disabled = busy || Boolean(check.failure);
+    return check;
+  }
+
+  function render(entries, {remember = true} = {}) {
+    const values = api.validateEntries(entries);
+    rows.replaceChildren();
+    inputs = values.map((entry, index) => {
+      const row = rows.insertRow();
+      row.insertCell().textContent = entry.code;
+      row.insertCell().textContent = api.defaults[index].weight.toFixed(2);
+      const input = document.createElement('input');
+      input.type = 'number'; input.min = '0.01'; input.step = '0.01'; input.required = true;
+      input.inputMode = 'decimal'; input.value = entry.weight.toFixed(2);
+      input.setAttribute('aria-label', entry.code + ' 單重（kg）');
+      input.dataset.code = entry.code;
+      row.insertCell().appendChild(input);
+      return input;
+    });
+    if (remember) baseline = signature();
+    updateControls();
+  }
+
+  function notifySaved() {
+    try { channel?.postMessage({type: 'weights-updated'}); }
+    catch (_) { /* 通知失敗不影響已完成的資料庫儲存。 */ }
+  }
+
+  async function action(task, pendingText) {
+    if (busy) return;
+    busy = true;
+    error.hidden = true;
+    status.textContent = pendingText;
+    updateControls();
+    try { await task(); }
+    catch (failure) {
+      status.textContent = isDirty() ? '目前修改尚未儲存。' : hasDatabaseValues ?
+        '未能完成資料庫操作，畫面保留先前讀取的重量。' : '無法讀取資料庫；目前顯示內建預設重量，尚未儲存。';
+      showError(failure);
+    } finally {
+      busy = false;
+      updateControls();
+    }
+  }
+
+  function mayDiscard() {
+    return !isDirty() || window.confirm('目前重量修改尚未儲存，確定要捨棄這些修改並繼續？');
+  }
+
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    const check = inspect();
+    if (check.failure) { showError(check.failure); check.failure.field?.focus(); return; }
+    action(async () => {
+      const saved = await api.save(check.entries);
+      render(saved);
+      hasDatabaseValues = true;
+      status.textContent = '全部 20 種桿件重量已儲存，計算頁將使用新的單重。';
+      notifySaved();
+    }, '正在儲存全部重量…');
+  });
+
+  rows.addEventListener('input', () => {
+    error.hidden = true;
+    const check = updateControls();
+    status.textContent = isDirty() ? '目前重量有未儲存的修改。' : '目前重量沒有新的修改。';
+    if (check.failure) showError(check.failure);
+  });
+
+  document.getElementById('reload-weights').addEventListener('click', () => {
+    if (!mayDiscard()) return;
+    action(async () => {
+      render(await api.load());
+      hasDatabaseValues = true;
+      status.textContent = '已重新讀取本機資料庫中的重量。';
+    }, '正在重新讀取重量…');
+  });
+
+  document.getElementById('reset-weights').addEventListener('click', () => {
+    if (!window.confirm('確定將全部 20 種單重恢復為內建預設值？這會直接更新資料庫，並取代目前修改。')) return;
+    action(async () => {
+      render(await api.reset());
+      hasDatabaseValues = true;
+      status.textContent = '已將全部重量恢復為內建預設值並儲存。';
+      notifySaved();
+    }, '正在恢復並儲存內建預設重量…');
+  });
+
+  document.getElementById('export-weights').addEventListener('click', () => {
+    try {
+      const check = inspect();
+      if (check.failure) throw check.failure;
+      const blob = new Blob([JSON.stringify(api.makeBackup(check.entries), null, 2)], {type: 'application/json;charset=utf-8'});
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = objectUrl; link.download = '桿件重量備份.json';
+      document.body.appendChild(link); link.click(); link.remove();
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+      status.textContent = '已匯出目前畫面的有效重量；未儲存的修改仍需按「儲存全部重量」。';
+    } catch (failure) { showError(failure); }
+  });
+
+  document.getElementById('import-weights').addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files[0]; fileInput.value = '';
+    if (!file || !mayDiscard()) return;
+    action(async () => {
+      if (file.size > 2 * 1024 * 1024) throw new Error('重量備份超過 2 MB，請選擇本工具匯出的重量備份。');
+      let data;
+      try { data = JSON.parse(await file.text()); }
+      catch (_) { throw new Error('無法讀取 JSON 備份，請檢查檔案內容。'); }
+      const entries = api.parseBackup(data);
+      render(entries, {remember: false});
+      status.textContent = '已載入備份供檢查，尚未寫入資料庫。請按「儲存全部重量」套用。';
+    }, '正在檢查重量備份…');
+  });
+
+  window.addEventListener('beforeunload', event => {
+    if (isDirty()) { event.preventDefault(); event.returnValue = ''; }
+  });
+
+  if (channel) channel.onmessage = event => {
+    if (event.data?.type === 'weights-updated' && !busy) {
+      status.textContent = '其他頁面已更新重量資料庫，按「重新讀取資料庫」可取得新重量。' +
+        (isDirty() ? '目前修改仍未儲存。' : '');
+    }
+  };
+
+  try { render(api.defaults); }
+  catch (failure) { showError(failure); status.textContent = '內建重量資料不完整。'; editor.disabled = true; return; }
+  action(async () => {
+    render(await api.load());
+    hasDatabaseValues = true;
+    status.textContent = '已讀取本機資料庫，共 20 種桿件重量。';
+  }, '正在載入重量資料庫…');
+})();
+  </script>
+</body>
+</html>
