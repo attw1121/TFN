@@ -24,7 +24,7 @@ test('three material checks reproduce the reference worksheet results', () => {
   }
 });
 
-test('reference checks drive joist spacing and steel capacity only when explicitly selected', () => {
+test('Sucoot material checks allow joist spacing above 200 mm when capacity permits', () => {
   const shape = TowerFoundation.calculate({...TowerFoundation.example, width: 1400, projection: 4000,
     innerDepth: 1800, outerDepth: 1800});
   const catalog = [0.6, 0.9, 1.5, 1.8, 2.4].flatMap(size => [
@@ -33,10 +33,12 @@ test('reference checks drive joist spacing and steel capacity only when explicit
   ]);
   const inputs = {board, timber, steel, concrete: 2.4, impact: 0.2, live: 0.2, legCapacity: 15, sideExtension: 0};
   const buildFrame = () => ({members: [], issues: []});
-  const reference = TowerSupport.plan(shape, {...inputs, materialMethod: method}, catalog, buildFrame);
+  const deeperTimber = {...timber, ...TowerFoundation.rectangleSection(60, 85), height: 0.085};
+  const reference = TowerSupport.plan(shape, {...inputs, timber: deeperTimber, materialMethod: method}, catalog, buildFrame);
   assert.equal(reference.armFrames.length, 4);
   const refArm = reference.armFrames[0];
-  assert.ok(refArm.joistPitch <= 0.20);
+  assert.equal(refArm.joistPitch, 0.25);
+  assert.ok(refArm.joistPitch <= refArm.screening.timberLimit);
   assert.equal(refArm.screening.steelFactor, 1);
   assert.equal(refArm.steelSupportSpan, method.spanLimit('steel', steel, Math.max(...refArm.steelLineLoads) * 10));
   for (const checks of Object.values(TowerSupport.getMaterialChecks(reference, refArm))) {

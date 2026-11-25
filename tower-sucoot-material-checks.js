@@ -2,7 +2,6 @@
   'use strict';
 
   // 161kV 天輪～潭南 #40 塔基計算書，第三至五章。斷面與應力採 cm、kgf。
-  const maxJoistPitch = 0.20;
   const fixedDeflectionLimit = 0.30;
 
   function checks(type, section, span, line, cantilever = false) {
@@ -53,5 +52,5 @@
     return {...results.reduce((worst, result) => result.pitch < worst.pitch ? result : worst, {pitch: Infinity}), checks: results};
   }
 
-  root.TowerSucootMaterialChecks = Object.freeze({checks, lineCapacity, spanLimit, timberPitch, maxJoistPitch});
+  root.TowerSucootMaterialChecks = Object.freeze({checks, lineCapacity, spanLimit, timberPitch});
 })(typeof window === 'undefined' ? globalThis : window);
