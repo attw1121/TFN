@@ -183,7 +183,7 @@
       '剪應力 fv = wL ÷ (2A)', '撓度 δ = wL⁴ ÷ (128EI)，上限 ' + limit];
     const overhang = '端部懸伸另以懸臂式 M = wL² ÷ 2、V = wL、δ = wL⁴ ÷ (8EI) 檢核。';
     materialPage('board', '三、設計模板', '以 1 m 寬板帶檢核，板跨依木角材中心間距及梁底坡度換算。' +
-      (materialMethod ? '角材中心間距依原案採 200 mm 上限。' : '木材採短期 Fb、Fv。'),
+      (materialMethod ? '木角材中心間距依角材檢核結果與模板容許板跨決定。' : '木材採短期 Fb、Fv。'),
       ['w 取梁身與平台面載重上限換算為 1 m 板帶線載重。',
         ...(materialMethod ? referenceFormulas('0.30 cm') : uniformFormulas)],
       ['採用線載重 w（kgf/cm）', '木角材中心間距（cm）'],

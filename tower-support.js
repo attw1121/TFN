@@ -553,7 +553,7 @@
           ? endByCriterion.get(check.criterion) : check);
         if (endCheck.pitch < timberCheck.pitch) timberCheck = endCheck;
       }
-      const maxTimberPitch = Math.min(boardSpan, timberCheck.pitch, materialMethod?.maxJoistPitch ?? Infinity);
+      const maxTimberPitch = Math.min(boardSpan, timberCheck.pitch);
       if (maxTimberPitch > widestTimberPitch) {
         widestTimberPitch = maxTimberPitch;
         widestTimberCheck = timberCheck;
