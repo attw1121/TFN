@@ -1,0 +1,1075 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>桿件計算</title>
+  <link rel="stylesheet" href="autocount-theme_活潑版.css">
+</head>
+<body class="calculator-page">
+  <main class="app-shell">
+    <header class="site-header">
+      <a class="brand" href="autoCount(20190904)_活潑版.html" aria-label="桿件小幫手，配置計算首頁">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M8 6v20M24 6v20M8 9h16M8 23h16M8 9l16 14M24 9 8 23" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>桿件小幫手</span>
+      </a>
+      <nav class="site-nav" aria-label="主要導覽"><a href="autoCount(20190904)_活潑版.html" aria-current="page">配置計算</a><a href="桿件重量修改_活潑版.html" target="_blank" rel="noopener">單重設定</a></nav>
+    </header>
+    <section class="page-hero" aria-labelledby="page-title">
+      <div class="hero-copy">
+        <p class="eyebrow">支撐架配置工具</p>
+        <h1 id="page-title">配置有條理，<br><span>計算更輕鬆。</span></h1>
+        <p class="hero-description">設定間距、範圍與高度，整理好每一根桿件。<br>從配置到重量，讓估算更順手。</p>
+        <div class="hero-badges"><span class="badge">3 步驟完成配置</span><span class="badge">20 種桿件</span><span class="badge">可離線使用</span></div>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <svg viewBox="0 0 380 265" fill="none">
+          <circle cx="287" cy="61" r="36" fill="#ffd27a"/><circle cx="294" cy="56" r="47" stroke="#e8bd70" stroke-dasharray="3 8"/>
+          <path d="M42 214 178 142l147 72-140 38L42 214Z" fill="#deebe0"/>
+          <path d="m85 93 103-55 103 56-103 55L85 93Z" fill="#f8fcf8" stroke="#173e40" stroke-width="4" stroke-linejoin="round"/>
+          <path d="M85 93v103l103 54V149m0 101 103-54V94" stroke="#087f74" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M188 38v104M85 196l103-54 103 54M85 145l103 54 103-54M85 93l103 157m0-101L85 196m206-102L188 250m0-101 103 47" stroke="#087f74" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M74 202h22m82 51h22m80-51h22" stroke="#173e40" stroke-width="6" stroke-linecap="round"/>
+          <circle cx="85" cy="93" r="7" fill="#ffd27a" stroke="#173e40" stroke-width="3"/><circle cx="188" cy="149" r="7" fill="#ffd27a" stroke="#173e40" stroke-width="3"/><circle cx="291" cy="94" r="7" fill="#ffd27a" stroke="#173e40" stroke-width="3"/>
+          <path d="M44 109v12m-6-6h12m287 36v10m-5-5h10" stroke="#65bda4" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+        <span class="hero-art-note"><b>一根一根，</b>都算清楚。</span>
+      </div>
+    </section>
+    <div class="workspace">
+      <form id="calculator">
+        <section class="surface form-section" aria-labelledby="spacing-heading">
+          <div class="section-heading"><span class="step-number" aria-hidden="true">01</span><div><h2 id="spacing-heading">支撐架間距</h2><p>先選擇 X、Y 軸間距，也可以混合不同規格。</p></div></div>
+          <div class="axis-grid">
+            <div class="axis-group"><span class="axis-pill">X 軸方向</span>
+              <div class="field"><label for="a1">支撐架間距（m）</label><select id="a1" name="a1">
+          <option value="0.6">0.6</option>
+          <option value="0.9">0.9</option>
+          <option value="1.5">1.5</option>
+          <option value="1.8">1.8</option>
+          <option value="2.4">2.4</option>
+        </select></div>
+              <div class="field"><label for="a9">自訂間距（m）</label><span class="option"><input type="checkbox" id="ck01" name="ck01"><label for="ck01">使用自訂間距</label></span><textarea placeholder="例如：0.6, 0.9, 1.5" aria-describedby="gap-help" id="a9" name="a9" rows="1" disabled></textarea></div>
+              <div class="field"><label for="a11" id="lab01">斜桿配置位置</label><span class="option"><input type="checkbox" id="ck03" name="ck03"><label for="ck03">使用自訂位置</label></span><textarea placeholder="例如：1, 3（第 1、3 跨）" id="a11" name="a11" rows="1" disabled></textarea></div>
+            </div>
+            <div class="axis-group y-axis"><span class="axis-pill">Y 軸方向</span>
+              <div class="field"><label for="a2">支撐架間距（m）</label><select id="a2" name="a2">
+          <option value="0.6">0.6</option>
+          <option value="0.9">0.9</option>
+          <option value="1.5">1.5</option>
+          <option value="1.8">1.8</option>
+          <option value="2.4">2.4</option>
+        </select></div>
+              <div class="field"><label for="a10">自訂間距（m）</label><span class="option"><input type="checkbox" id="ck02" name="ck02"><label for="ck02">使用自訂間距</label></span><textarea placeholder="例如：0.6, 0.9, 1.5" aria-describedby="gap-help" id="a10" name="a10" rows="1" disabled></textarea></div>
+              <div class="field"><label for="a12" id="lab02">斜桿配置位置</label><span class="option"><input type="checkbox" id="ck04" name="ck04"><label for="ck04">使用自訂位置</label></span><textarea placeholder="例如：1, 3（第 1、3 跨）" id="a12" name="a12" rows="1" disabled></textarea></div>
+            </div>
+          </div>
+          <p id="gap-help" class="hint">支援間距：0.6、0.9、1.5、1.8、2.4 m。自訂數值請以逗號或空白分隔。</p>
+        </section>
+        <section class="surface form-section" aria-labelledby="range-heading">
+          <div class="section-heading"><span class="step-number sunny" aria-hidden="true">02</span><div><h2 id="range-heading">支撐範圍</h2><p>輸入配置範圍的長、寬；自訂間距時將依各跨計算。</p></div></div>
+          <div class="fields-grid"><div class="field"><label for="a3" id="lab03">X 軸長度 L1（m）</label><input type="number" id="a3" name="a3" min="0" step="any" required></div><div class="field"><label for="a4" id="lab04">Y 軸長度 L2（m）</label><input type="number" id="a4" name="a4" min="0" step="any" required></div></div>
+        </section>
+        <section class="surface form-section" aria-labelledby="height-heading">
+          <div class="section-heading"><span class="step-number blue" aria-hidden="true">03</span><div><h2 id="height-heading">四角支撐高度</h2><p>依照示意圖，填入四個位置的高度。</p></div></div>
+          <div class="fields-grid"><div class="field"><label for="a5"><span class="height-label"><span class="corner-number">1</span>高度（m）</span></label><input type="number" id="a5" name="a5" min="0" step="any" required></div><div class="field"><label for="a6"><span class="height-label"><span class="corner-number">2</span>高度（m）</span></label><input type="number" id="a6" name="a6" min="0" step="any" required></div><div class="field"><label for="a7"><span class="height-label"><span class="corner-number">3</span>高度（m）</span></label><input type="number" id="a7" name="a7" min="0" step="any" required></div><div class="field"><label for="a8"><span class="height-label"><span class="corner-number">4</span>高度（m）</span></label><input type="number" id="a8" name="a8" min="0" step="any" required></div></div>
+          <div class="fields-grid adjustments"><div class="field"><label for="baseh">下調調整高度（m）</label><input type="number" id="baseh" name="baseh" value="0.2" min="0" step="any"></div><div class="field"><label for="v60h">平主架尺寸（m）</label><select id="v60h" name="v60h">
+          <option value="3">3.0</option>
+          <option value="1.5">1.5</option>
+        </select></div></div>
+        </section>
+        <div class="calculate-bar"><div><strong>設定好了，就開始計算！</strong><p>重量會套用資料庫中已儲存的單重。</p></div><button class="button primary calculate-button" type="submit">運算 <span aria-hidden="true">↗</span></button></div>
+        <p id="error" role="alert" hidden></p>
+      </form>
+      <aside class="sidebar" aria-label="配置參考與單重設定">
+        <section class="surface reference-card" id="reference" aria-labelledby="reference-heading">
+          <p class="panel-kicker">QUICK GUIDE</p><h2 id="reference-heading">先看位置，再填高度</h2><p class="hint">四角高度請對照示意圖的①～④位置。</p>
+          <a href="05_1.png" target="_blank" rel="noopener" aria-label="開啟完整高度位置示意圖"><img class="reference-image" src="05_1.png" width="498" height="247" alt="支撐架配置及四角高度示意圖"></a>
+          <a class="text-link" href="05_1.png" target="_blank" rel="noopener">放大查看示意圖 <span aria-hidden="true">↗</span></a>
+        </section>
+        <section id="weight-settings" class="surface weight-card" aria-labelledby="weight-heading">
+          <span class="weight-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 4v15m-4 1h8M5 7h14M6 7l-3 7h6L6 7Zm12 0-3 7h6l-3-7Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <h2 id="weight-heading">單重，照你的設定</h2><p class="hint">20 種桿件單重可獨立調整。儲存後，這裡的計算會同步更新。</p>
+          <div class="weight-actions"><a class="button primary" href="桿件重量修改_活潑版.html" target="_blank" rel="noopener">開啟重量修改頁 <span aria-hidden="true">↗</span></a><button id="reload-weights" class="button secondary" type="button">重新讀取單重</button></div>
+          <p id="weight-status" role="status">正在載入重量資料…</p><p id="weight-error" role="alert" hidden></p>
+        </section>
+      </aside>
+    </div>
+    <section id="results" aria-live="polite" hidden></section>
+    <section id="model-3d" class="surface model-panel" aria-label="3D 桿件圖面"></section>
+    <footer class="site-footer"><span>桿件小幫手 · 讓估算更輕鬆</span><span>依配置自動計量 · 依設定換算重量</span></footer>
+  </main>
+  <script src="material-weights_活潑版.js"></script>
+  <script src="scaffold-model.js"></script>
+  <script src="scaffold-sucoot.js"></script>
+  <script src="scaffold-viewer3d.js"></script>
+  <script src="scaffold-3d-ui.js"></script>
+  <script>
+(() => {
+  "use strict";
+
+  if (!globalThis.MaterialWeights) {
+    const status = document.getElementById('weight-error');
+    status.textContent = '無法載入重量資料庫程式，請確認 material-weights_活潑版.js 與本網頁在同一資料夾。';
+    status.hidden = false;
+    document.querySelector('#calculator button[type="submit"]').disabled = true;
+    document.getElementById('reload-weights').disabled = true;
+    return;
+  }
+  const SPACINGS = [0.6, 0.9, 1.5, 1.8, 2.4];
+  const MATERIALS = MaterialWeights.defaults.map(({
+    code,
+    weight
+  }) => [code, weight]);
+
+  // 間距陣列兩端為邊距，中間為各跨支撐架間距。
+  function buildAxis(spacing, length, customGaps) {
+    if (customGaps !== null) return [0, ...customGaps, 0];
+    let spans = Math.floor(length / spacing);
+    let margin = Number(((length / spacing - spans) * spacing / 2).toFixed(2));
+    let replacement = null;
+    if (margin >= spacing / 2) {
+      if (spacing >= 1.5) {
+        margin = (margin * 2 - 0.9) / 2;
+        replacement = 0.9;
+      }
+    } else if (margin <= 0.15) {
+      if (spacing < 0.9) {
+        margin = Number((margin + spacing / 2).toFixed(2));
+        spans -= 1;
+      } else {
+        replacement = spacing < 1.5 ? 0.6 : 0.9;
+        margin = Number((margin + (spacing - replacement) / 2).toFixed(2));
+      }
+    }
+    return Array.from({
+      length: spans + 2
+    }, (_, index) => {
+      if (index === 2 && replacement !== null) return replacement;
+      return index === 0 || index === spans + 1 ? margin : spacing;
+    });
+  }
+  function createGrid(columns, rows) {
+    return Array.from({
+      length: columns
+    }, () => Array(rows).fill(0));
+  }
+  function countDiagonal(height) {
+    if (Number((height / 1.5).toFixed(1)) > 2) {
+      const remainder = height % 1.5;
+      return Math.floor(height / 1.5) + Number(remainder > 1.15 && remainder <= 1.65);
+    }
+    if (height < 1.5 || Math.abs(height - 1.5) <= 0.15) return 0;
+    const remainder = height - 1.5;
+    return 1 + Number(remainder > 1.15 && remainder <= 1.65);
+  }
+  function calculateMaterials(input, details = null) {
+    if (details) { details.rails = []; details.diagonals = []; details.truncated = false; }
+    const captureLink = (collection, link) => {
+      if (!details || link.count <= 0) return;
+      if (details[collection].length >= 50000) { details.truncated = true; return; }
+      details[collection].push(link);
+    };
+    const xGaps = buildAxis(input.spacingX, input.lengthX, input.xGaps);
+    const yGaps = buildAxis(input.spacingY, input.lengthY, input.yGaps);
+    const xSpanCount = xGaps.length - 2;
+    const ySpanCount = yGaps.length - 2;
+    const hasCustomX = input.xGaps !== null;
+    const hasCustomY = input.yGaps !== null;
+    const quantities = Array(20).fill(0);
+    var i_r01, i01, clearHeight;
+    var xHeightDifference = Math.abs(parseFloat(input.h1) - parseFloat(input.h2));
+    var yHeightDifference = 0;
+    // 先計算 X 軸兩側高程，再沿 Y 軸插值。
+    var edgeHeights = new Array(2);
+    for (var ij = 0; ij < 2; ij++) {
+      edgeHeights[ij] = new Array(parseFloat(xSpanCount) + 3);
+    }
+    var heights = new Array(parseFloat(xSpanCount + 3));
+    for (var ic = 0; ic < xSpanCount + 3; ic++) {
+      heights[ic] = new Array(parseFloat(ySpanCount) + 3);
+    }
+    var totalLengthX = 0;
+    var distance = 0;
+    var lastXGapIndex;
+    lastXGapIndex = parseFloat(xGaps.length) - 1;
+    if (hasCustomX == true) {
+      for (var x1 = 0; x1 < xSpanCount + 2; x1++) {
+        totalLengthX += parseFloat(xGaps[x1]);
+      }
+      for (var xi = 0; xi < 2; xi++) {
+        xHeightDifference = Math.abs(xi === 0 ? input.h1 - input.h2 : input.h3 - input.h4);
+        distance = 0;
+        for (i_r01 = 1; i_r01 < parseFloat(xSpanCount) + 2; i_r01++) {
+          if (i_r01 == 1) {
+            if (xi == 0) {
+              edgeHeights[xi][i_r01 - 1] = input.h1;
+              edgeHeights[xi][i_r01] = input.h1;
+            } else {
+              edgeHeights[xi][i_r01 - 1] = input.h3;
+              edgeHeights[xi][i_r01] = input.h3;
+            }
+          } else {
+            if (i_r01 == parseFloat(xSpanCount) + 1) {
+              if (xi == 0) {
+                edgeHeights[xi][i_r01 + 1] = input.h2;
+                edgeHeights[xi][i_r01] = input.h2;
+              } else {
+                edgeHeights[xi][i_r01 + 1] = input.h4;
+                edgeHeights[xi][i_r01] = input.h4;
+              }
+            } else {
+              if (xi == 0) {
+                if (parseFloat(input.h1) > parseFloat(input.h2)) {
+                  distance += parseFloat(xGaps[lastXGapIndex - i_r01 + 1]);
+                  edgeHeights[xi][lastXGapIndex - i_r01 + 1] = parseFloat(distance) * parseFloat(xHeightDifference) / parseFloat(totalLengthX) + parseFloat(input.h2);
+                } else {
+                  distance += parseFloat(xGaps[i_r01 - 1]);
+                  edgeHeights[xi][i_r01] = parseFloat(distance) * parseFloat(xHeightDifference) / parseFloat(totalLengthX) + parseFloat(input.h1);
+                }
+              } else {
+                if (parseFloat(input.h3) > parseFloat(input.h4)) {
+                  distance += parseFloat(xGaps[lastXGapIndex - i_r01 + 1]);
+                  edgeHeights[xi][lastXGapIndex - i_r01 + 1] = parseFloat(distance) * parseFloat(xHeightDifference) / parseFloat(totalLengthX) + parseFloat(input.h4);
+                } else {
+                  distance += parseFloat(xGaps[i_r01 - 1]);
+                  edgeHeights[xi][i_r01] = parseFloat(distance) * parseFloat(xHeightDifference) / parseFloat(totalLengthX) + parseFloat(input.h3);
+                }
+              }
+            }
+          }
+        }
+      }
+    } else {
+      totalLengthX = input.lengthX;
+      for (var xi = 0; xi < 2; xi++) {
+        xHeightDifference = Math.abs(xi === 0 ? input.h1 - input.h2 : input.h3 - input.h4);
+        distance = 0;
+        for (i_r01 = 0; i_r01 < parseFloat(xSpanCount) + 3; i_r01++) {
+          if (i_r01 == 0) {
+            if (xi == 0) {
+              edgeHeights[xi][i_r01] = input.h1;
+            } else {
+              edgeHeights[xi][i_r01] = input.h3;
+            }
+          } else {
+            if (i_r01 == parseFloat(xSpanCount) + 2) {
+              if (xi == 0) {
+                edgeHeights[xi][i_r01] = input.h2;
+              } else {
+                edgeHeights[xi][i_r01] = input.h4;
+              }
+            } else {
+              if (xi == 0) {
+                if (parseFloat(input.h1) > parseFloat(input.h2)) {
+                  distance += parseFloat(xGaps[lastXGapIndex - i_r01 + 1]);
+                  edgeHeights[xi][lastXGapIndex - i_r01 + 1] = parseFloat(distance) * parseFloat(xHeightDifference) / parseFloat(totalLengthX) + parseFloat(input.h2);
+                } else {
+                  distance += parseFloat(xGaps[i_r01 - 1]);
+                  edgeHeights[xi][i_r01] = parseFloat(distance) * parseFloat(xHeightDifference) / parseFloat(totalLengthX) + parseFloat(input.h1);
+                }
+              } else {
+                if (parseFloat(input.h3) > parseFloat(input.h4)) {
+                  distance += parseFloat(xGaps[lastXGapIndex - i_r01 + 1]);
+                  edgeHeights[xi][lastXGapIndex - i_r01 + 1] = parseFloat(distance) * parseFloat(xHeightDifference) / parseFloat(totalLengthX) + parseFloat(input.h4);
+                } else {
+                  distance += parseFloat(xGaps[i_r01 - 1]);
+                  edgeHeights[xi][i_r01] = parseFloat(distance) * parseFloat(xHeightDifference) / parseFloat(totalLengthX) + parseFloat(input.h3);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    var totalLengthY = 0;
+    var lastYGapIndex;
+    lastYGapIndex = parseFloat(yGaps.length) - 1;
+    if (hasCustomY == true) {
+      for (var y1 = 0; y1 < ySpanCount + 2; y1++) {
+        totalLengthY += parseFloat(yGaps[y1]);
+      }
+    } else {
+      totalLengthY = input.lengthY;
+    }
+    for (var xj = 0; xj < xSpanCount + 3; xj++) {
+      distance = 0;
+      for (i_r01 = 0; i_r01 < parseFloat(ySpanCount) + 3; i_r01++) {
+        yHeightDifference = Math.abs(parseFloat(edgeHeights[0][xj]) - parseFloat(edgeHeights[1][xj]));
+        if (i_r01 == 0) {
+          heights[xj][i_r01] = parseFloat(edgeHeights[0][xj]);
+        } else {
+          if (i_r01 == parseFloat(ySpanCount) + 2) {
+            heights[xj][i_r01] = parseFloat(edgeHeights[1][xj]);
+          } else {
+            if (parseFloat(edgeHeights[0][xj]) > parseFloat(edgeHeights[1][xj])) {
+              distance += parseFloat(yGaps[lastYGapIndex - i_r01 + 1]);
+              heights[xj][lastYGapIndex - i_r01 + 1] = parseFloat(distance) * parseFloat(yHeightDifference) / parseFloat(totalLengthY) + parseFloat(edgeHeights[1][xj]);
+            } else {
+              distance += parseFloat(yGaps[i_r01 - 1]);
+              heights[xj][i_r01] = parseFloat(distance) * parseFloat(yHeightDifference) / parseFloat(totalLengthY) + parseFloat(edgeHeights[0][xj]);
+            }
+          }
+        }
+      }
+    }
+    var frameRatio = 0;
+    // 主架及套筒數量，以網格保留相鄰點的配置資料。
+    var v60300Grid = createGrid(xSpanCount + 3, ySpanCount + 3);
+    var v60100Grid = createGrid(xSpanCount + 3, ySpanCount + 3);
+    var v60150Grid = createGrid(xSpanCount + 3, ySpanCount + 3);
+    var v61150Grid = createGrid(xSpanCount + 3, ySpanCount + 3);
+    var v61100Grid = createGrid(xSpanCount + 3, ySpanCount + 3);
+    var v62050Grid = createGrid(xSpanCount + 3, ySpanCount + 3);
+    var v62025Grid = createGrid(xSpanCount + 3, ySpanCount + 3);
+    var v62020Grid = createGrid(xSpanCount + 3, ySpanCount + 3);
+    var u48601Grid = createGrid(xSpanCount + 3, ySpanCount + 3);
+    var j48601Grid = createGrid(xSpanCount + 3, ySpanCount + 3);
+    const baseHeight = input.baseHeight;
+    const socketHeight = 0.2;
+    for (var xg = 0; xg < parseFloat(ySpanCount) + 3; xg++) {
+      if (xg > 0) {
+        if (xg < parseFloat(ySpanCount) + 2) {
+          for (i01 = 0; i01 < parseFloat(xSpanCount) + 3; i01++) {
+            if (i01 > 0) {
+              if (i01 < parseFloat(xSpanCount) + 2) {
+                clearHeight = parseFloat(heights[i01][xg] - baseHeight - socketHeight).toFixed(2);
+                v62020Grid[i01][xg] = 1;
+                j48601Grid[i01][xg] = 1;
+                u48601Grid[i01][xg] = 1;
+                frameRatio = parseFloat(clearHeight / 1.5).toFixed(1);
+                if (frameRatio > 2) {
+                  if (input.frameHeight == 3) {
+                    v60300Grid[i01][xg] = 1;
+                    v61150Grid[i01][xg] = parseFloat(Math.floor(clearHeight / 1.5) - 2);
+                  } else {
+                    v60150Grid[i01][xg] = 1;
+                    v61150Grid[i01][xg] = parseFloat(Math.floor(clearHeight / 1.5) - 1);
+                  }
+                  if (parseFloat(clearHeight % 1.5).toFixed(2) <= 1.65) {
+                    if (parseFloat(clearHeight % 1.5).toFixed(2) <= 1.4) {
+                      if (parseFloat(clearHeight % 1.5).toFixed(2) <= 1.15) {
+                        if (parseFloat(clearHeight % 1.5).toFixed(2) <= 0.9) {
+                          if (parseFloat(clearHeight % 1.5).toFixed(2) <= 0.65) {
+                            if (parseFloat(clearHeight % 1.5).toFixed(2) <= 0.4) {
+                              if (parseFloat(clearHeight % 1.5).toFixed(2) < 0.15) {
+                                if (v61150Grid[i01][xg] === 0) {
+                                  // 沒有長套筒可縮短時，改用 1.5 m 主架，避免扣出負數套筒。
+                                  v61100Grid[i01][xg] = 1;
+                                  v62025Grid[i01][xg] = 1;
+                                  v60150Grid[i01][xg] += 1;
+                                  v60300Grid[i01][xg] -= 1;
+                                } else {
+                                  v61150Grid[i01][xg] -= 1;
+                                  v61100Grid[i01][xg] = 1;
+                                  v62025Grid[i01][xg] = 1;
+                                }
+                              }
+                            } else {
+                              v62025Grid[i01][xg] = 1;
+                            }
+                          } else {
+                            v62050Grid[i01][xg] = 1;
+                          }
+                        } else {
+                          v62025Grid[i01][xg] = 1;
+                          v62050Grid[i01][xg] = 1;
+                        }
+                      } else {
+                        v61100Grid[i01][xg] = 1;
+                      }
+                    } else {
+                      v62025Grid[i01][xg] = 1;
+                      v61100Grid[i01][xg] = 1;
+                    }
+                  }
+                } else {
+                  if (clearHeight < 1.5) {
+                    v60100Grid[i01][xg] = 1;
+                    if (parseFloat(clearHeight - 1) < 0.65) {
+                      if (!(clearHeight - 1 < 0.4)) {
+                        v62025Grid[i01][xg] = 1;
+                      }
+                    }
+                  } else {
+                    if (Math.abs(parseFloat(clearHeight - 1.5)) <= 0.15) {
+                      v60100Grid[i01][xg] = 1;
+                      if (parseFloat(clearHeight - 1) < 0.65) {
+                        if (!(clearHeight - 1 < 0.4)) {
+                          v62025Grid[i01][xg] = 1;
+                        }
+                      }
+                    } else {
+                      v60150Grid[i01][xg] = 1;
+                      if (clearHeight - 1.5 < 1.65) {
+                        if (clearHeight - 1.5 < 1.4) {
+                          if (clearHeight - 1.5 < 1.15) {
+                            if (clearHeight - 1.5 < 0.9) {
+                              if (clearHeight - 1.5 < 0.65) {
+                                if (!(clearHeight - 1.5 < 0.4)) {
+                                  v62025Grid[i01][xg] = 1;
+                                }
+                              } else {
+                                v62050Grid[i01][xg] = 1;
+                              }
+                            } else {
+                              v62050Grid[i01][xg] = 1;
+                              v62025Grid[i01][xg] = 1;
+                            }
+                          } else {
+                            v61100Grid[i01][xg] = 1;
+                          }
+                        } else {
+                          v61100Grid[i01][xg] = 1;
+                          v62025Grid[i01][xg] = 1;
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    // 相鄰高差小於 0.5 m 時，判斷長套筒是否需換成兩個短套筒。
+    var sleeveRows = 0;
+    var sleeveColumns = 0;
+    for (var douRun = 0; douRun < 2; douRun++) {
+      if (douRun == 0) {
+        sleeveRows = ySpanCount + 3;
+        sleeveColumns = xSpanCount + 3;
+      } else {
+        sleeveRows = xSpanCount + 3;
+        sleeveColumns = ySpanCount + 3;
+      }
+      for (var i_12 = 1; i_12 < sleeveRows; i_12++) {
+        for (var j_12 = 1; j_12 < sleeveColumns; j_12++) {
+          if (douRun == 0) {
+            if (v62050Grid[j_12][i_12] == 1) {
+              if (heights[j_12][i_12] > heights[j_12 - 1][i_12]) {
+                if (v62025Grid[j_12 - 1][i_12] == 1) {
+                  if (v62050Grid[j_12 - 1][i_12] == 0) {
+                    if (parseFloat(heights[j_12][i_12]) - parseFloat(heights[j_12 - 1][i_12]) < 0.5) {
+                      v62025Grid[j_12][i_12] = 2;
+                      v62050Grid[j_12][i_12] = 0;
+                    }
+                  }
+                }
+              } else {
+                if (heights[j_12][i_12] > heights[j_12 + 1][i_12]) {
+                  if (v62025Grid[j_12 + 1][i_12] == 1) {
+                    if (v62050Grid[j_12 + 1][i_12] == 0) {
+                      if (parseFloat(heights[j_12][i_12]) - parseFloat(heights[j_12 + 1][i_12]) < 0.5) {
+                        v62025Grid[j_12][i_12] = 2;
+                        v62050Grid[j_12][i_12] = 0;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          } else {
+            if (v62050Grid[i_12][j_12] == 1) {
+              if (heights[i_12][j_12] > heights[i_12][j_12 - 1]) {
+                if (v62025Grid[i_12][j_12 - 1] == 1) {
+                  if (v62050Grid[i_12][j_12 - 1] == 0) {
+                    if (parseFloat(heights[i_12][j_12]) - parseFloat(heights[i_12][j_12 - 1]) < 0.5) {
+                      v62025Grid[i_12][j_12] = 2;
+                      v62050Grid[i_12][j_12] = 0;
+                    }
+                  }
+                }
+              } else {
+                if (heights[i_12][j_12] > heights[i_12][j_12 + 1]) {
+                  if (v62025Grid[i_12][j_12 + 1] == 1) {
+                    if (v62050Grid[i_12][j_12 + 1] == 0) {
+                      if (parseFloat(heights[i_12][j_12]) - parseFloat(heights[i_12][j_12 + 1]) < 0.5) {
+                        v62025Grid[i_12][j_12] = 2;
+                        v62050Grid[i_12][j_12] = 0;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    for (var i_10 = 0; i_10 < xSpanCount + 3; i_10++) {
+      for (var j_10 = 0; j_10 < ySpanCount + 3; j_10++) {
+        quantities[2] += v60300Grid[i_10][j_10];
+        quantities[0] += v60100Grid[i_10][j_10];
+        quantities[1] += v60150Grid[i_10][j_10];
+        quantities[3] += v61100Grid[i_10][j_10];
+        quantities[4] += v61150Grid[i_10][j_10];
+        quantities[5] += v62025Grid[i_10][j_10];
+        quantities[6] += v62050Grid[i_10][j_10];
+        quantities[7] += v62020Grid[i_10][j_10];
+        quantities[9] += j48601Grid[i_10][j_10];
+        quantities[8] += u48601Grid[i_10][j_10];
+      }
+    }
+    // 分別累加 X / Y 向橫桿。
+    var railHeight = 0;
+    var railCount = 0;
+    var railSpacing = 0;
+    var heightDifference = 0;
+    var railRows = 0;
+    var railColumns = 0;
+    var shortSleeves = 0;
+    for (var runtwo = 0; runtwo < 2; runtwo++) {
+      railCount = 0;
+      if (runtwo == 0) {
+        railRows = parseFloat(ySpanCount + 2);
+        railColumns = parseFloat(xSpanCount + 1);
+      } else {
+        railRows = parseFloat(xSpanCount + 2);
+        railColumns = parseFloat(ySpanCount + 1);
+      }
+      for (xg = 1; xg < railRows; xg++) {
+        for (var i02 = 1; i02 < railColumns; i02++) {
+          if (runtwo == 0) {
+            if (parseFloat(heights[i02][xg]) <= parseFloat(heights[i02 + 1][xg])) {
+              railHeight = parseFloat(heights[i02][xg] - baseHeight - socketHeight).toFixed(2);
+            } else {
+              railHeight = parseFloat(heights[i02 + 1][xg] - baseHeight - socketHeight).toFixed(2);
+            }
+          } else {
+            if (parseFloat(heights[xg][i02]) <= parseFloat(heights[xg][i02 + 1])) {
+              railHeight = parseFloat(heights[xg][i02] - baseHeight - socketHeight).toFixed(2);
+            } else {
+              railHeight = parseFloat(heights[xg][i02 + 1] - baseHeight - socketHeight).toFixed(2);
+            }
+          }
+          if (parseFloat(railHeight / 1.5).toFixed(1) > 2) {
+            railCount = Math.floor(railHeight / 1.5) + 1;
+            if (railHeight % 1.5 <= 1.65) {
+              if (railHeight % 1.5 <= 1.4) {
+                if (railHeight % 1.5 <= 1.15) {
+                  if (railHeight % 1.5 <= 0.9) {
+                    if (railHeight % 1.5 <= 0.65) {
+                      if (railHeight % 1.5 <= 0.4) {
+                        if (railHeight % 1.5 < 0.15) {
+                          if (runtwo == 0) {
+                            if (parseFloat(heights[i02][xg]) <= parseFloat(heights[i02 + 1][xg])) {
+                              heightDifference = parseFloat(heights[i02 + 1][xg] - baseHeight - socketHeight).toFixed(2) - parseFloat(heights[i02][xg] - baseHeight - socketHeight).toFixed(2);
+                              shortSleeves = v62025Grid[i02 + 1][xg] + v62025Grid[i02][xg];
+                            } else {
+                              heightDifference = parseFloat(heights[i02][xg] - baseHeight - socketHeight).toFixed(2) - parseFloat(heights[i02 + 1][xg] - baseHeight - socketHeight).toFixed(2);
+                              shortSleeves = v62025Grid[i02 + 1][xg] + v62025Grid[i02][xg];
+                            }
+                          } else {
+                            if (parseFloat(heights[xg][i02]) <= parseFloat(heights[xg][i02 + 1])) {
+                              heightDifference = parseFloat(heights[xg][i02 + 1] - baseHeight - socketHeight).toFixed(2) - parseFloat(heights[xg][i02] - baseHeight - socketHeight).toFixed(2);
+                              shortSleeves = v62025Grid[xg][i02 + 1] + v62025Grid[xg][i02];
+                            } else {
+                              heightDifference = parseFloat(heights[xg][i02] - baseHeight - socketHeight).toFixed(2) - parseFloat(heights[xg][i02 + 1] - baseHeight - socketHeight).toFixed(2);
+                              shortSleeves = v62025Grid[xg][i02 + 1] + v62025Grid[xg][i02];
+                            }
+                          }
+                          if (shortSleeves > 1) {
+                            if (heightDifference < 50) {
+                              railCount += 1;
+                            }
+                          }
+                        }
+                      } else {
+                        if (runtwo == 0) {
+                          if (parseFloat(heights[i02][xg]) <= parseFloat(heights[i02 + 1][xg])) {
+                            heightDifference = parseFloat(heights[i02 + 1][xg] - baseHeight - socketHeight).toFixed(2) - parseFloat(heights[i02][xg] - baseHeight - socketHeight).toFixed(2);
+                            shortSleeves = v62025Grid[i02 + 1][xg] + v62025Grid[i02][xg];
+                          } else {
+                            heightDifference = parseFloat(heights[i02][xg] - baseHeight - socketHeight).toFixed(2) - parseFloat(heights[i02 + 1][xg] - baseHeight - socketHeight).toFixed(2);
+                            shortSleeves = v62025Grid[i02 + 1][xg] + v62025Grid[i02][xg];
+                          }
+                        } else {
+                          if (parseFloat(heights[xg][i02]) <= parseFloat(heights[xg][i02 + 1])) {
+                            heightDifference = parseFloat(heights[xg][i02 + 1] - baseHeight - socketHeight).toFixed(2) - parseFloat(heights[xg][i02] - baseHeight - socketHeight).toFixed(2);
+                            shortSleeves = v62025Grid[xg][i02 + 1] + v62025Grid[xg][i02];
+                          } else {
+                            heightDifference = parseFloat(heights[xg][i02] - baseHeight - socketHeight).toFixed(2) - parseFloat(heights[xg][i02 + 1] - baseHeight - socketHeight).toFixed(2);
+                            shortSleeves = v62025Grid[xg][i02 + 1] + v62025Grid[xg][i02];
+                          }
+                        }
+                        if (shortSleeves > 1) {
+                          if (heightDifference < 50) {
+                            railCount += 1;
+                          }
+                        }
+                      }
+                    } else {
+                      railCount += 1;
+                    }
+                  } else {
+                    railCount += 1;
+                  }
+                } else {
+                  railCount += 1;
+                }
+              } else {
+                railCount += 1;
+                if (runtwo == 0) {
+                  if (parseFloat(heights[i02][xg]) <= parseFloat(heights[i02 + 1][xg])) {
+                    heightDifference = parseFloat(heights[i02 + 1][xg] - baseHeight - socketHeight).toFixed(2) - parseFloat(heights[i02][xg] - baseHeight - socketHeight).toFixed(2);
+                    shortSleeves = v62025Grid[i02 + 1][xg] + v62025Grid[i02][xg];
+                  } else {
+                    heightDifference = parseFloat(heights[i02][xg] - baseHeight - socketHeight).toFixed(2) - parseFloat(heights[i02 + 1][xg] - baseHeight - socketHeight).toFixed(2);
+                    shortSleeves = v62025Grid[i02 + 1][xg] + v62025Grid[i02][xg];
+                  }
+                } else {
+                  if (parseFloat(heights[xg][i02]) <= parseFloat(heights[xg][i02 + 1])) {
+                    heightDifference = parseFloat(heights[xg][i02 + 1] - baseHeight - socketHeight).toFixed(2) - parseFloat(heights[xg][i02] - baseHeight - socketHeight).toFixed(2);
+                    shortSleeves = v62025Grid[xg][i02 + 1] + v62025Grid[xg][i02];
+                  } else {
+                    heightDifference = parseFloat(heights[xg][i02] - baseHeight - socketHeight).toFixed(2) - parseFloat(heights[xg][i02 + 1] - baseHeight - socketHeight).toFixed(2);
+                    shortSleeves = v62025Grid[xg][i02 + 1] + v62025Grid[xg][i02];
+                  }
+                }
+                if (shortSleeves > 1) {
+                  if (heightDifference < 50) {
+                    railCount += 1;
+                  }
+                }
+              }
+            }
+          } else {
+            if (railHeight < 1.5) {
+              railCount = Math.floor(railHeight / 1.5) + 2;
+              if (parseFloat(railHeight - 1) < 0.65) {
+                if (!(railHeight - 1 < 0.4)) {
+                  if (runtwo == 0) {
+                    if (parseFloat(heights[i02][xg]) <= parseFloat(heights[i02 + 1][xg])) {
+                      heightDifference = parseFloat(heights[i02 + 1][xg] - baseHeight - socketHeight).toFixed(2) - parseFloat(heights[i02][xg] - baseHeight - socketHeight).toFixed(2);
+                      shortSleeves = v62025Grid[i02 + 1][xg] + v62025Grid[i02][xg];
+                    } else {
+                      heightDifference = parseFloat(heights[i02][xg] - baseHeight - socketHeight).toFixed(2) - parseFloat(heights[i02 + 1][xg] - baseHeight - socketHeight).toFixed(2);
+                      shortSleeves = v62025Grid[i02 + 1][xg] + v62025Grid[i02][xg];
+                    }
+                  } else {
+                    if (parseFloat(heights[xg][i02]) <= parseFloat(heights[xg][i02 + 1])) {
+                      heightDifference = parseFloat(heights[xg][i02 + 1] - baseHeight - socketHeight).toFixed(2) - parseFloat(heights[xg][i02] - baseHeight - socketHeight).toFixed(2);
+                      shortSleeves = v62025Grid[xg][i02 + 1] + v62025Grid[xg][i02];
+                    } else {
+                      heightDifference = parseFloat(heights[xg][i02] - baseHeight - socketHeight).toFixed(2) - parseFloat(heights[xg][i02 + 1] - baseHeight - socketHeight).toFixed(2);
+                      shortSleeves = v62025Grid[xg][i02 + 1] + v62025Grid[xg][i02];
+                    }
+                  }
+                  if (shortSleeves > 1) {
+                    if (heightDifference < 50) {
+                      railCount += 1;
+                    }
+                  }
+                }
+              }
+            } else {
+              if (Math.abs(parseFloat(railHeight - 1.5)) <= 0.15) {
+                railCount = Math.floor(railHeight / 1.5) + 2;
+                if (parseFloat(railHeight - 1) <= 0.65) {
+                  if (!(railHeight - 1 <= 0.4)) {
+                    if (runtwo == 0) {
+                      if (parseFloat(heights[i02][xg]) <= parseFloat(heights[i02 + 1][xg])) {
+                        heightDifference = parseFloat(heights[i02 + 1][xg] - baseHeight - socketHeight).toFixed(2) - parseFloat(heights[i02][xg] - baseHeight - socketHeight).toFixed(2);
+                        shortSleeves = v62025Grid[i02 + 1][xg] + v62025Grid[i02 + 1][xg];
+                      } else {
+                        heightDifference = parseFloat(heights[i02][xg] - baseHeight - socketHeight).toFixed(2) - parseFloat(heights[i02 + 1][xg] - baseHeight - socketHeight).toFixed(2);
+                        shortSleeves = v62025Grid[i02 + 1][xg] + v62025Grid[i02 + 1][xg];
+                      }
+                    } else {
+                      if (parseFloat(heights[xg][i02]) <= parseFloat(heights[xg][i02 + 1])) {
+                        heightDifference = parseFloat(heights[xg][i02 + 1] - baseHeight - socketHeight).toFixed(2) - parseFloat(heights[xg][i02] - baseHeight - socketHeight).toFixed(2);
+                        shortSleeves = v62025Grid[xg][i02 + 1] + v62025Grid[xg][i02 + 1];
+                      } else {
+                        heightDifference = parseFloat(heights[xg][i02] - baseHeight - socketHeight).toFixed(2) - parseFloat(heights[xg][i02 + 1] - baseHeight - socketHeight).toFixed(2);
+                        shortSleeves = v62025Grid[xg][i02 + 1] + v62025Grid[xg][i02 + 1];
+                      }
+                    }
+                    if (shortSleeves > 1) {
+                      if (heightDifference < 50) {
+                        railCount += 1;
+                      }
+                    }
+                  }
+                }
+              } else {
+                if (Math.floor(railHeight / 1.5) >= 2) {
+                  railCount = Math.floor(railHeight / 1.5);
+                } else {
+                  railCount = Math.floor(railHeight / 1.5) + 1;
+                }
+                if (railHeight - 1.5 < 1.65) {
+                  if (railHeight - 1.5 < 1.4) {
+                    if (railHeight - 1.5 < 1.15) {
+                      if (railHeight - 1.5 < 0.9) {
+                        if (railHeight - 1.5 < 0.65) {
+                          if (!(railHeight - 1.5 < 0.4)) {
+                            if (runtwo == 0) {
+                              if (parseFloat(heights[i02][xg]) <= parseFloat(heights[i02 + 1][xg])) {
+                                heightDifference = parseFloat(heights[i02 + 1][xg] - baseHeight - socketHeight).toFixed(2) - parseFloat(heights[i02][xg] - baseHeight - socketHeight).toFixed(2);
+                                shortSleeves = v62025Grid[i02 + 1][xg] + v62025Grid[i02][xg];
+                              } else {
+                                heightDifference = parseFloat(heights[i02][xg] - baseHeight - socketHeight).toFixed(2) - parseFloat(heights[i02 + 1][xg] - baseHeight - socketHeight).toFixed(2);
+                                shortSleeves = v62025Grid[i02 + 1][xg] + v62025Grid[i02][xg];
+                              }
+                            } else {
+                              if (parseFloat(heights[xg][i02]) <= parseFloat(heights[xg][i02 + 1])) {
+                                heightDifference = parseFloat(heights[xg][i02 + 1] - baseHeight - socketHeight).toFixed(2) - parseFloat(heights[xg][i02] - baseHeight - socketHeight).toFixed(2);
+                                shortSleeves = v62025Grid[xg][i02 + 1] + v62025Grid[xg][i02];
+                              } else {
+                                heightDifference = parseFloat(heights[xg][i02] - baseHeight - socketHeight).toFixed(2) - parseFloat(heights[xg][i02 + 1] - baseHeight - socketHeight).toFixed(2);
+                                shortSleeves = v62025Grid[xg][i02 + 1] + v62025Grid[xg][i02];
+                              }
+                            }
+                            if (shortSleeves > 1) {
+                              if (heightDifference < 50) {
+                                railCount += 1;
+                              }
+                            }
+                          }
+                        } else {
+                          railCount += 1;
+                        }
+                      } else {
+                        if (runtwo == 0) {
+                          if (parseFloat(heights[i02][xg]) <= parseFloat(heights[i02 + 1][xg])) {
+                            heightDifference = parseFloat(heights[i02 + 1][xg] - baseHeight - socketHeight).toFixed(2) - parseFloat(heights[i02][xg] - baseHeight - socketHeight).toFixed(2);
+                            shortSleeves = v62025Grid[i02 + 1][xg] + v62025Grid[i02][xg];
+                          } else {
+                            heightDifference = parseFloat(heights[i02][xg] - baseHeight - socketHeight).toFixed(2) - parseFloat(heights[i02 + 1][xg] - baseHeight - socketHeight).toFixed(2);
+                            shortSleeves = v62025Grid[i02 + 1][xg] + v62025Grid[i02][xg];
+                          }
+                        } else {
+                          if (parseFloat(heights[xg][i02]) <= parseFloat(heights[xg][i02 + 1])) {
+                            heightDifference = parseFloat(heights[xg][i02 + 1] - baseHeight - socketHeight).toFixed(2) - parseFloat(heights[xg][i02] - baseHeight - socketHeight).toFixed(2);
+                            shortSleeves = v62025Grid[xg][i02 + 1] + v62025Grid[xg][i02];
+                          } else {
+                            heightDifference = parseFloat(heights[xg][i02] - baseHeight - socketHeight).toFixed(2) - parseFloat(heights[xg][i02 + 1] - baseHeight - socketHeight).toFixed(2);
+                            shortSleeves = v62025Grid[xg][i02 + 1] + v62025Grid[xg][i02];
+                          }
+                        }
+                        if (shortSleeves > 1) {
+                          if (heightDifference < 50) {
+                            railCount += 1;
+                          }
+                        }
+                      }
+                    } else {
+                      railCount += 1;
+                    }
+                  } else {
+                    railCount += 1;
+                    if (runtwo == 0) {
+                      if (parseFloat(heights[i02][xg]) <= parseFloat(heights[i02 + 1][xg])) {
+                        heightDifference = parseFloat(heights[i02 + 1][xg] - baseHeight - socketHeight).toFixed(2) - parseFloat(heights[i02][xg] - baseHeight - socketHeight).toFixed(2);
+                        shortSleeves = v62025Grid[i02 + 1][xg] + v62025Grid[i02][xg];
+                      } else {
+                        heightDifference = parseFloat(heights[i02][xg] - baseHeight - socketHeight).toFixed(2) - parseFloat(heights[i02 + 1][xg] - baseHeight - socketHeight).toFixed(2);
+                        shortSleeves = v62025Grid[i02 + 1][xg] + v62025Grid[i02][xg];
+                      }
+                    } else {
+                      if (parseFloat(heights[xg][i02]) <= parseFloat(heights[xg][i02 + 1])) {
+                        heightDifference = parseFloat(heights[xg][i02 + 1] - baseHeight - socketHeight).toFixed(2) - parseFloat(heights[xg][i02] - baseHeight - socketHeight).toFixed(2);
+                        shortSleeves = v62025Grid[xg][i02 + 1] + v62025Grid[xg][i02];
+                      } else {
+                        heightDifference = parseFloat(heights[xg][i02] - baseHeight - socketHeight).toFixed(2) - parseFloat(heights[xg][i02 + 1] - baseHeight - socketHeight).toFixed(2);
+                        shortSleeves = v62025Grid[xg][i02 + 1] + v62025Grid[xg][i02];
+                      }
+                    }
+                    if (shortSleeves > 1) {
+                      if (heightDifference < 50) {
+                        railCount += 1;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+          if (runtwo == 0) {
+            railSpacing = xGaps[i02];
+          } else {
+            railSpacing = yGaps[i02];
+          }
+          const railType = SPACINGS.indexOf(Number(railSpacing));
+          if (railType !== -1) captureLink('rails', {
+            axis: runtwo === 0 ? 'X' : 'Y', row: xg, startIndex: i02, endIndex: i02 + 1,
+            typeIndex: 10 + railType, count: railCount, clearHeight: Number(railHeight)
+          });
+          if (railSpacing == 2.4) {
+            quantities[14] += railCount;
+          } else {
+            const size = SPACINGS.indexOf(Number(railSpacing));
+            if (size !== -1) quantities[10 + size] += railCount;
+          }
+        }
+      }
+    }
+    // X / Y 斜桿共用規則，預設末端保留原本的回退取點。
+    for (const [gaps, positions, spans, rows, transpose] of [[xGaps, input.xBraces, xSpanCount, ySpanCount, false], [yGaps, input.yBraces, ySpanCount, xSpanCount, true]]) {
+      const selected = positions ?? Array.from({
+        length: Math.floor((spans + 2) / 2)
+      }, (_, i) => (i + 1) * 2);
+      for (let row = 1; row < rows + 2; row++) {
+        for (const position of selected) {
+          const end = positions !== null ? position + 1 : position > spans + 1 ? position - 1 : position;
+          const first = transpose ? heights[row][end] : heights[end][row];
+          const second = transpose ? heights[row][end - 1] : heights[end - 1][row];
+          const height = Number((Math.max(first, second) - baseHeight - socketHeight).toFixed(2));
+          const size = SPACINGS.indexOf(Number(gaps[end - 1]));
+          if (size !== -1) {
+            const count = countDiagonal(height);
+            quantities[15 + size] += count;
+            captureLink('diagonals', {axis: transpose ? 'Y' : 'X', row, startIndex: end - 1, endIndex: end,
+              typeIndex: 15 + size, count, clearHeight: height});
+          }
+        }
+      }
+    }
+    if (details) Object.assign(details, {
+      input: {...input}, xGaps: xGaps.map(Number), yGaps: yGaps.map(Number), heights,
+      verticalCounts: {V60100: v60100Grid, V60150: v60150Grid, V60300: v60300Grid,
+        V61100: v61100Grid, V61150: v61150Grid, V62025: v62025Grid, V62050: v62050Grid,
+        V62020: v62020Grid, U48601: u48601Grid, J48601: j48601Grid},
+      quantities: quantities.slice()
+    });
+    return quantities;
+  }
+  // 表單與結果
+  const form = document.getElementById('calculator');
+  const fields = Object.fromEntries(Array.from(form.elements).filter(field => field.id).map(field => [field.id, field]));
+  const results = document.getElementById('results');
+  const error = document.getElementById('error');
+  const weightStatus = document.getElementById('weight-status');
+  const weightError = document.getElementById('weight-error');
+  const reloadWeights = document.getElementById('reload-weights');
+  const calculateButton = form.querySelector('button[type="submit"]');
+  let catalog = null;
+  let weightsReady = false;
+  let weightRequest = 0;
+  let lastQuantities = null;
+  let lastGeometry = null;
+  const modelSection = document.getElementById('model-3d');
+  const modelPanel = globalThis.Scaffold3DPanel ? Scaffold3DPanel.create(modelSection) : null;
+  if (!modelPanel) modelSection.textContent = '3D 圖面模組未能載入，請確認 scaffold JavaScript 檔案與本頁在同一資料夾。';
+  async function refreshWeights() {
+    const request = ++weightRequest;
+    weightsReady = false;
+    calculateButton.disabled = true;
+    reloadWeights.disabled = true;
+    weightError.hidden = true;
+    weightStatus.textContent = '正在讀取本機桿件單重…';
+    try {
+      const entries = await MaterialWeights.load();
+      if (request !== weightRequest) return false;
+      catalog = MaterialWeights.validateEntries(entries);
+      weightsReady = true;
+      weightStatus.textContent = '已讀取本機資料庫的 20 種桿件單重。';
+      if (lastQuantities) renderResults(lastQuantities);
+      return true;
+    } catch (failure) {
+      if (request === weightRequest) {
+        weightStatus.textContent = '尚未取得可用的重量資料。';
+        weightError.textContent = '單重讀取失敗：' + failure.message + ' 請按「重新讀取單重」重試。';
+        weightError.hidden = false;
+        results.hidden = true;
+      }
+      return false;
+    } finally {
+      if (request === weightRequest) {
+        calculateButton.disabled = !weightsReady;
+        reloadWeights.disabled = false;
+      }
+    }
+  }
+  function clearResults() {
+    lastQuantities = null;
+    lastGeometry = null;
+    modelPanel?.clearCalculation();
+    results.hidden = true;
+    results.replaceChildren();
+    error.hidden = true;
+    error.textContent = '';
+  }
+  for (const [toggle, target, inactive, label] of [['ck01', 'a9', ['a1', 'a3'], 'lab03'], ['ck02', 'a10', ['a2', 'a4'], 'lab04'], ['ck03', 'a11', [], 'lab01'], ['ck04', 'a12', [], 'lab02']]) {
+    const labelElement = document.getElementById(label);
+    const sync = clear => {
+      const checked = fields[toggle].checked;
+      fields[target].disabled = !checked;
+      fields[target].required = checked;
+      inactive.forEach(id => {
+        fields[id].disabled = checked;
+      });
+      labelElement.style.color = (inactive.length ? checked : !checked) ? 'gray' : '';
+      if (clear && !checked) {
+        fields[target].value = '';
+        fields[target].style.height = '';
+      }
+    };
+    fields[toggle].addEventListener('change', () => {
+      sync(true);
+      clearResults();
+    });
+    sync(false);
+  }
+  form.addEventListener('input', event => {
+    clearResults();
+    if (event.target.tagName === 'TEXTAREA') {
+      event.target.style.height = 'auto';
+      event.target.style.height = event.target.scrollHeight + 2 + 'px';
+    }
+  });
+  form.addEventListener('change', clearResults);
+  function invalid(message, field) {
+    const failure = new Error(message);
+    failure.field = field;
+    throw failure;
+  }
+  function readNumber(id, label, allowZero = false) {
+    const text = fields[id].value.trim();
+    const value = Number(text);
+    if (!text || !Number.isFinite(value) || (allowZero ? value < 0 : value <= 0)) {
+      invalid(label + (allowZero ? '必須是大於或等於 0 的數字。' : '必須是大於 0 的數字。'), id);
+    }
+    return value;
+  }
+  function readList(id, label, integers = false) {
+    const text = fields[id].value.trim();
+    if (!text) invalid('請填寫' + label + '。', id);
+    const tokens = text.split(/[\s,，、;；]+/);
+    if (tokens.some(token => !/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(token))) {
+      invalid(label + '請使用數字，並以逗號或空白分隔。', id);
+    }
+    const values = tokens.map(Number);
+    if (values.some(value => !Number.isFinite(value) || value <= 0 || integers && !Number.isSafeInteger(value))) {
+      invalid(label + (integers ? '必須是正整數。' : '必須是大於 0 的數字。'), id);
+    }
+    return values;
+  }
+  function readInput() {
+    const input = {
+      spacingX: Number(fields.a1.value),
+      spacingY: Number(fields.a2.value),
+      lengthX: fields.ck01.checked ? 0 : readNumber('a3', 'X 軸長度'),
+      lengthY: fields.ck02.checked ? 0 : readNumber('a4', 'Y 軸長度'),
+      h1: readNumber('a5', '① 高度'),
+      h2: readNumber('a6', '② 高度'),
+      h3: readNumber('a7', '③ 高度'),
+      h4: readNumber('a8', '④ 高度'),
+      baseHeight: fields.baseh.value.trim() ? readNumber('baseh', '下調高度', true) : 0.2,
+      frameHeight: Number(fields.v60h.value),
+      xGaps: fields.ck01.checked ? readList('a9', 'X 軸自訂間距') : null,
+      yGaps: fields.ck02.checked ? readList('a10', 'Y 軸自訂間距') : null,
+      xBraces: fields.ck03.checked ? readList('a11', 'X 軸斜桿位置', true) : null,
+      yBraces: fields.ck04.checked ? readList('a12', 'Y 軸斜桿位置', true) : null
+    };
+    for (const [gaps, id, axis] of [[input.xGaps, 'a9', 'X'], [input.yGaps, 'a10', 'Y']]) {
+      if (gaps && gaps.some(gap => !SPACINGS.includes(gap))) {
+        invalid(axis + ' 軸自訂間距僅支援 ' + SPACINGS.join('、') + ' m。', id);
+      }
+    }
+    // 先限制網格大小，避免異常尺寸造成大量陣列配置。
+    const columns = input.xGaps ? input.xGaps.length + 3 : Math.floor(input.lengthX / input.spacingX) + 3;
+    const rows = input.yGaps ? input.yGaps.length + 3 : Math.floor(input.lengthY / input.spacingY) + 3;
+    if (columns * rows > 1000000) invalid('配置點數過多，請縮小範圍或增加間距。');
+    const spanX = buildAxis(input.spacingX, input.lengthX, input.xGaps).length - 2;
+    const spanY = buildAxis(input.spacingY, input.lengthY, input.yGaps).length - 2;
+    for (const [positions, spans, id, axis] of [[input.xBraces, spanX, 'a11', 'X'], [input.yBraces, spanY, 'a12', 'Y']]) {
+      if (positions && positions.some(position => position > spans)) {
+        invalid(axis + ' 軸斜桿位置超出範圍；目前共有 ' + spans + ' 跨。', id);
+      }
+      if (positions && new Set(positions).size !== positions.length) invalid(axis + ' 軸斜桿位置不可重複。', id);
+    }
+    for (const [height, id] of [[input.h1, 'a5'], [input.h2, 'a6'], [input.h3, 'a7'], [input.h4, 'a8']]) {
+      if (height <= input.baseHeight + 0.2) invalid('支撐高度必須大於下調高度與標準基座合計高度。', id);
+    }
+    return input;
+  }
+  function renderResults(quantities) {
+    if (!weightsReady || !catalog) invalid('請先成功讀取本機重量資料庫。');
+    const totals = MaterialWeights.calculateTotals(quantities, catalog);
+    const table = document.createElement('table');
+    table.createCaption().textContent = '計算結果';
+    const header = table.createTHead().insertRow();
+    for (const title of ['項目', '數量', '單重（kg）', '合計（kg）']) {
+      const cell = document.createElement('th');
+      cell.scope = 'col';
+      cell.textContent = title;
+      header.appendChild(cell);
+    }
+    const body = table.createTBody();
+    catalog.forEach(({
+      code,
+      weight
+    }, index) => {
+      const quantity = quantities[index];
+      if (quantity > 0) {
+        const row = body.insertRow();
+        for (const value of [code, quantity, weight.toFixed(2), MaterialWeights.formatWeight(totals.subtotals[index])]) {
+          row.insertCell().textContent = value;
+        }
+      }
+    });
+    const footer = table.createTFoot().insertRow();
+    const label = document.createElement('th');
+    label.colSpan = 3;
+    label.scope = 'row';
+    label.textContent = '總重（kg）';
+    footer.appendChild(label);
+    footer.insertCell().textContent = MaterialWeights.formatWeight(totals.total);
+    const heading = document.createElement('div');
+    heading.className = 'result-heading';
+    const headingText = document.createElement('div');
+    const title = document.createElement('h2'); title.textContent = '計算完成，用量一目了然';
+    const description = document.createElement('p'); description.textContent = '以下依目前配置與資料庫單重計算。';
+    headingText.append(title, description); heading.appendChild(headingText);
+    const stats = document.createElement('div'); stats.className = 'result-stats';
+    for (const [label, value, unit] of [
+      ['使用品項', quantities.filter(quantity => quantity > 0).length.toLocaleString('zh-TW'), '種'],
+      ['桿件總數', quantities.reduce((sum, quantity) => sum + quantity, 0).toLocaleString('zh-TW'), '件'],
+      ['估算總重', MaterialWeights.formatWeight(totals.total), 'kg']
+    ]) {
+      const card = document.createElement('div'); card.className = 'stat';
+      const caption = document.createElement('span'); caption.textContent = label;
+      const number = document.createElement('strong'); number.textContent = value;
+      const suffix = document.createElement('small'); suffix.textContent = unit;
+      number.appendChild(suffix); card.append(caption, number); stats.appendChild(card);
+    }
+    results.replaceChildren(heading, stats, table);
+    results.hidden = false;
+    if (lastGeometry) modelPanel?.setCalculation(lastGeometry);
+  }
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    clearResults();
+    try {
+      const input = readInput();
+      // 數量先保留；若讀取被焦點或跨頁通知取代，由最新讀取完成後顯示。
+      const details = {};
+      lastQuantities = calculateMaterials(input, details);
+      lastGeometry = details;
+      await refreshWeights();
+    } catch (failure) {
+      error.textContent = failure.message;
+      error.hidden = false;
+      if (failure.field) fields[failure.field].focus();
+    }
+  });
+  reloadWeights.addEventListener('click', refreshWeights);
+  window.addEventListener('focus', refreshWeights);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') refreshWeights();
+  });
+  if (typeof BroadcastChannel === 'function') {
+    try {
+      const changes = new BroadcastChannel('autocount-material-weights');
+      changes.addEventListener('message', event => {
+        if (event.data?.type === 'weights-updated') refreshWeights();
+      });
+    } catch (_) {/* 不支援跨頁通知時，切回頁面或運算仍會重新讀取。 */}
+  }
+  refreshWeights();
+})();
+  </script>
+</body>
+</html>
