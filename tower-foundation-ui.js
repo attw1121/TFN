@@ -1141,6 +1141,31 @@ window.mountTowerFoundation = function (options) {
     }
   }
 
+  function exportDxf() {
+    const status = byId('dxf-status');
+    status.hidden = false;
+    try {
+      if (!window.TowerDxf) throw new Error('DXF 匯出模組未載入，請確認網頁資源在同一資料夾。');
+      window.cancelAnimationFrame(supportUpdate);
+      supportUpdate = 0;
+      const snapshot = configureSupport();
+      const {content, schematicParts} = window.TowerDxf.exportDrawing({...snapshot, groundProfiles});
+      const url = URL.createObjectURL(new Blob([content], {type: 'application/dxf'}));
+      const attachment = document.createElement('a');
+      attachment.href = url;
+      attachment.download = '電塔基座支撐.dxf';
+      document.body.append(attachment);
+      attachment.click();
+      attachment.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      status.textContent = snapshot.layout.message ? 'DXF 已匯出目前的平面圖與剖面圖。' + snapshot.layout.message
+        : 'DXF 已匯出平面圖、a–c 與 b–d 剖面圖及支撐配置。' +
+          (schematicParts.length ? '採用示意線的料號：' + schematicParts.join('、') + '。' : '');
+    } catch (failure) {
+      status.textContent = '無法匯出 DXF。' + failure.message;
+    }
+  }
+
   function fillSupportExample() {
     for (const [id, value] of Object.entries({
       'formwork-thickness': '21', 'timber-width': '90', 'timber-height': '150',
@@ -1215,6 +1240,7 @@ window.mountTowerFoundation = function (options) {
   byId('support-example').addEventListener('click', fillSupportExample);
   byId('preview-material-example').addEventListener('click', fillSupportExample);
   byId('create-report').addEventListener('click', createReport);
+  byId('export-dxf')?.addEventListener('click', exportDxf);
   reset();
   selectView('iso');
   return queueSupport;

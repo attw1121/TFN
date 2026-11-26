@@ -378,6 +378,7 @@
           <button class="button tower-configure-button" id="tower-configure-support" type="button">自動配置</button>
           <button class="button" id="tower-support-example" type="button">填入範例材料</button>
           <button class="button" id="tower-create-report" type="button">製作計算書</button>
+          <button class="button" id="tower-export-dxf" type="button">另存 DXF</button>
         </div>
       </div>
       <div id="tower-platform-options" class="tower-platform-options">
@@ -414,6 +415,7 @@
       </details>
       <p id="tower-support-status" class="tower-detail" role="status"></p>
       <p id="tower-report-status" class="tower-error" role="status" hidden></p>
+      <p id="tower-dxf-status" class="tower-detail" role="status" hidden></p>
       <dl id="tower-support-results" class="tower-support-results" hidden>
         <div><dt>H 型鋼最大容許支距（水平）</dt><dd id="tower-steel-support-span"></dd></div>
         <div><dt>順梁跨距（井桶 → 梁端）</dt><dd id="tower-support-longitudinal"></dd></div>
@@ -616,6 +618,9 @@
   <script src="tower-sucoot-material-checks.js"></script>
   <script src="tower-support.js"></script>
   <script src="tower-report.js"></script>
+  <script src="tower-dxf-blocks.js"></script>
+  <script src="tower-dxf-template.js"></script>
+  <script src="tower-dxf.js"></script>
   <script src="tower-foundation-ui.js"></script>
   <script>
 (function (root) {
