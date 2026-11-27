@@ -94,6 +94,19 @@
     return sectionProperties(area, inertia, height / 2);
   }
 
+  function beddingSection(type, dimensions) {
+    if (type === 'steel') return steelSection(dimensions);
+    const [height, width, wall, flange] = dimensions.map(value => value / 10);
+    if (type === 'timber') return rectangleSection(width * 10, height * 10);
+    if (!(height > 0 && width > 0 && wall > 0)) return null;
+    // Channel and tube dimensions define sharp-corner nominal sections.
+    const hollowHeight = height - 2 * (type === 'tube' ? wall : flange);
+    const hollowWidth = width - (type === 'tube' ? 2 : 1) * wall;
+    if (!(hollowHeight > 0 && hollowHeight < height && hollowWidth > 0)) return null;
+    return sectionProperties(width * height - hollowWidth * hollowHeight,
+      (width * height ** 3 - hollowWidth * hollowHeight ** 3) / 12, height / 2);
+  }
+
   function calculate(values) {
     for (const {key, number, label, min} of dimensions) {
       const value = values[key];
@@ -249,6 +262,6 @@
 
   root.TowerFoundation = Object.freeze({
     dimensions, example, beamArms, beamRotations, colors, memberCategories, calculate, makeModel, groundElevation, groundStations,
-    woodMaterials, steelProfiles, rectangleSection, steelSection
+    woodMaterials, steelProfiles, rectangleSection, steelSection, beddingSection
   });
 })(typeof window === 'undefined' ? globalThis : window);

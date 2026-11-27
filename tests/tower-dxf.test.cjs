@@ -103,3 +103,51 @@ test('DXF also exports unconfigured beam dimensions without inventing scaffold m
   assert.match(content, /目前未配置支撐架/);
   assert.ok(!entities(content).some(e => e.type === 'INSERT'));
 });
+
+test('DXF rotates only the U-jack seat to the mirrored steel slope and retains the original elevation dimensions', () => {
+  const positions = [0.2, 1.1];
+  const grid = {positions, gaps: [0.9]};
+  const frame = {members: [
+    {code: 'J48601', start: [0, 0, 0], end: [0, 0, 0.2]},
+    {code: 'V60100', start: [0, 0, 0.2], end: [0, 0, 1.2]},
+    {code: 'U48601', start: [0, 0, 1.2], end: [0, 0, 1.45]}
+  ]};
+  const armFrames = ['a', 'c'].map(arm => ({arm, frame, frameAlong: grid, frameAcross: grid}));
+  const layout = {armFrames, parts: new Map()};
+  const drawing = entities(TowerDxf.exportDrawing({shape, layout}).content);
+  const bearingInserts = name => drawing.filter(e => e.type === 'INSERT' && field(e, 2) === name);
+  const seats = bearingInserts('E_U63601S_SEAT_ALONG');
+  const stems = bearingInserts('E_U63601S_STEM_ALONG');
+  const degrees = Math.atan2(shape.outerSoffit - shape.clearance, shape.projection) * 180 / Math.PI;
+  assert.equal(seats.length, 2);
+  assert.deepEqual(seats.map(e => Number(field(e, 50))), [-degrees, degrees].map(value => Number(value.toFixed(4))));
+  assert.deepEqual(stems.map(e => Number(field(e, 50))), [0, 0]);
+  assert.deepEqual(stems.map(e => insertPoint(e)[0]), seats.map(e => insertPoint(e)[0]));
+  const plateBase = insertPoint(bearingInserts('E_J48601_PLATE')[0]);
+  assert.ok(Math.abs(insertPoint(seats[0])[1] + 66 / Math.cos(degrees * Math.PI / 180) - plateBase[1] - 1450) < 0.001);
+  const labels = drawing.filter(e => e.type === 'TEXT').map(e => field(e, 1));
+  assert.ok(labels.includes('900'));
+  assert.ok(!labels.some(label => /^(?:架高|上調|下調|下底座) \d/.test(label)));
+
+  const transverse = entities(TowerDxf.exportDrawing({shape, layout, materials: {layers: [{direction: 'across'}]}}).content);
+  const planAngle = (data, name) => Number(field(data.find(e => e.type === 'INSERT' && field(e, 2) === name), 50));
+  assert.equal(planAngle(transverse, 'E_U63601S_SEAT_ACROSS'), 0);
+  assert.equal(Math.abs(planAngle(transverse, 'P_U63601S') - planAngle(drawing, 'P_U63601S')), 90);
+});
+
+test('DXF exports an edited bedding stack as labelled section geometry before scaffold configuration', () => {
+  const layers = [
+    {type: 'channel', name: '槽鋼', directionName: '順梁向', valid: true, height: 0.1, specification: '100 × 50 × 5 × 8 mm'},
+    {type: 'tube', name: '方鋼管', directionName: '橫梁向', valid: true, height: 0.06, specification: '60 × 60 × 3 mm'}
+  ];
+  const {content} = TowerDxf.exportDrawing({shape, layout: {message: '未配置'}, materials: {board: {height: 0.021}, layers}});
+  const drawing = entities(content);
+  const polygons = drawing.filter(e => e.type === 'LWPOLYLINE' && field(e, 8) === 'STEEL');
+  assert.equal(polygons.length, 8);
+  assert.ok(drawing.some(e => e.type === 'TEXT' && field(e, 1) === '第 1 層 槽鋼　順梁向　100 × 50 × 5 × 8 mm'));
+  assert.ok(drawing.some(e => e.type === 'TEXT' && field(e, 1) === '第 2 層 方鋼管　橫梁向　60 × 60 × 3 mm'));
+  const y = polygon => polygon.fields.filter(([key]) => key === 20).map(([, value]) => Number(value));
+  assert.equal(y(polygons[0])[3], y(polygons[1])[0]);
+  assert.equal(Math.round(y(polygons[1])[0] - y(polygons[1])[3]), 60);
+  assert.ok(!drawing.some(e => e.type === 'INSERT'));
+});

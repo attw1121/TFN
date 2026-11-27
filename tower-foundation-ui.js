@@ -3,7 +3,7 @@ window.mountTowerFoundation = function (options) {
 
   const {getCatalog, buildFrame, materialMethod, endBayAtStart = false, fixedNeighborRule = false} = options;
   const {dimensions, example, beamArms, colors, memberCategories, calculate, makeModel, groundElevation, groundStations, woodMaterials,
-    steelProfiles, rectangleSection, steelSection} = window.TowerFoundation;
+    steelProfiles, rectangleSection, steelSection, beddingSection} = window.TowerFoundation;
   const byId = id => document.getElementById('tower-' + id);
   const form = byId('form');
   const fields = byId('fields');
@@ -521,7 +521,7 @@ window.mountTowerFoundation = function (options) {
     };
   }
 
-  function drawFormworkSection(shape, {board, timber, steel}, layout, extension) {
+  function drawFormworkSection(shape, {board, timber, steel, layers, beddingIssue}, layout, extension) {
     const values = byId('formwork-section-values');
     const note = byId('formwork-section-note');
     if (!shape.projection) {
@@ -538,15 +538,34 @@ window.mountTowerFoundation = function (options) {
     const totalWidth = beamWidth + 2 * extension;
     const mm = value => detailFormat.format(value * 1000);
     const joistPitch = layout ? '@' + Math.round(layout.joistPitch * 1000) : '';
+    const stack = layers ?? [];
+    const pitches = stack.map((layer, i) => {
+      if (i === stack.length - 1 && layer.type !== 'timber') return '';
+      const lanes = layout?.bedding?.rows[i].lanes;
+      const gaps = lanes ? lanes.slice(1).map((lane, j) => lane - lanes[j])
+        : layout ? i === 0 ? [layout.joistPitch] : layout.frameAcross.gaps : [];
+      const values = [...new Set(gaps.map(gap => Math.round(gap * 1000)))];
+      return values.length ? (layer.direction === 'along' ? '橫梁' : '順梁') + '間距 ' + values.map(gap => '@' + gap).join('、') : '';
+    });
+    const boardHeight = Number.isFinite(board?.height) && board.height > 0 ? board.height : 0;
+    const beddingHeight = stack.reduce((sum, layer) => sum + (layer.valid ? layer.height : 0), 0);
+    const complete = boardHeight && stack.every(layer => layer.valid);
     const rows = [
       ['beam-width', '⑤ 梁寬', mm(beamWidth) + ' mm'],
       ['extension', '兩側外延', extension ? '各 ' + mm(extension) + ' mm' : '不延伸'],
       ['total-width', '模板總寬', mm(totalWidth) + ' mm'],
-      ['board', '模板厚度', board ? mm(board.height) + ' mm' : '待輸入'],
-      ['timber', '木角材寬 × 高', timber ? mm(timber.width) + ' × ' + mm(timber.height) + ' mm' : '待輸入'],
-      ['joist-pitch', '木角材順梁中心間距（mm）', joistPitch || '待自動配置'],
-      ['steel', '型鋼 H × B × 腹板厚 × 翼板厚',
-        steel ? [steel.height, steel.width, steel.web, steel.flange].map(mm).join(' × ') + ' mm' : '待選規格'],
+      ['board', '模板厚度', boardHeight ? mm(boardHeight) + ' mm' : '待輸入'],
+      ...(layers ? [
+        ['bedding-height', '墊條總高', stack.every(layer => layer.valid) ? mm(beddingHeight) + ' mm' : '待輸入'],
+        ...stack.map((layer, i) => ['bedding-' + i, '第 ' + (i + 1) + ' 層 ' + layer.name,
+          [layer.directionName, layer.specification, pitches[i]].filter(Boolean).join(' · ')]),
+        ['net-clearance', '內／外梁底扣除材料後（基準高程 0）', complete
+          ? [shape.clearance, shape.outerSoffit].map(height => mm(height / 1000 - boardHeight - beddingHeight)).join('／') + ' mm' : '待輸入']
+      ] : [
+        ['timber', '木角材寬 × 高', timber ? mm(timber.width) + ' × ' + mm(timber.height) + ' mm' : '待輸入'],
+        ['steel', '型鋼 H × B × 腹板厚 × 翼板厚', steel ? [steel.height, steel.width, steel.web, steel.flange].map(mm).join(' × ') + ' mm' : '待選規格'],
+        ['joist-pitch', '木角材順梁中心間距（mm）', joistPitch || '待自動配置']
+      ]),
       ['support-gaps', '支撐排中心間距', layout ? layout.frameAcross.gaps.map(mm).join(' ＋ ') + ' mm' : '待自動配置']
     ];
     values.replaceChildren(...rows.map(([key, label, value]) => {
@@ -559,17 +578,19 @@ window.mountTowerFoundation = function (options) {
       item.append(term, detail);
       return item;
     }));
-    note.textContent = layout ? '圖示截取 ' + layout.arm + ' 梁底局部，垂直比例放大。型鋼位置依該梁的自動配置結果標示。'
-      : '圖示截取梁底局部。完成自動配置後會顯示型鋼位置。';
+    note.textContent = layout ? '圖示截取 ' + layout.arm + ' 梁底局部，垂直比例放大。'
+      : beddingIssue || '圖示截取梁底局部。墊條間距依自動配置結果標示。';
 
+    const schematic = Boolean(layers);
+    const drawingHeight = schematic ? Math.max(340, 215 + stack.length * 36) : 340;
     const ctx = canvas('formwork-section', (layout ? layout.arm + ' ' : '') + '梁底模板橫斷面。' +
-      rows.map(([, label, value]) => label + ' ' + value).join('，'), 660, 340);
+      rows.map(([, label, value]) => label + ' ' + value).join('，'), 660, drawingHeight);
     const scale = 408 / totalWidth;
     const x = value => 42 + (value + extension) * scale;
     const [left, innerLeft, innerRight, right] = [-extension, 0, beamWidth, beamWidth + extension].map(x);
     const deck = 136;
     const sectionScale = 99 / ((board?.height ?? 0) + (timber?.height ?? 0) + (steel?.height ?? 0) || 1);
-    const boardBottom = deck + (board ? Math.max(8, board.height * sectionScale) : 0);
+    const boardBottom = deck + (boardHeight ? schematic ? 10 : Math.max(8, boardHeight * sectionScale) : 0);
     const timberBottom = boardBottom + (timber ? Math.max(15, timber.height * sectionScale) : 0);
     const steelBottom = timberBottom + (steel && layout ? Math.max(24, steel.height * sectionScale) : 0);
     const rectangle = (a, b, top, bottom, fill) => polygon(ctx, [[a, top], [b, top], [b, bottom], [a, bottom]], fill);
@@ -580,19 +601,53 @@ window.mountTowerFoundation = function (options) {
       ctx.textAlign = 'left';
       ctx.fillStyle = ink;
       ctx.fillText(label, 501, labelY);
-      if (detail) ctx.fillText(detail, 501, labelY + 17);
+      if (detail) ctx.fillText(detail, 501, labelY + 17, 155);
       ctx.restore();
     }
 
     rectangle(innerLeft, innerRight, 91, deck, '#cbe7e0');
-    if (board) rectangle(left, right, deck, boardBottom, '#edc299');
+    if (boardHeight) rectangle(left, right, deck, boardBottom, '#edc299');
     else {
       ctx.setLineDash([5, 3]);
       line(ctx, [left, deck], [right, deck]);
       ctx.setLineDash([]);
     }
-    if (timber) rectangle(left, right, boardBottom, timberBottom, '#c49870');
-    if (layout && steel) {
+    if (schematic) {
+      let top = boardBottom;
+      for (const [i, layer] of stack.entries()) {
+        const depth = layer.valid ? Math.max(17, layer.height / beddingHeight * 95) : 20;
+        const bottom = top + depth;
+        const labelY = 179 + i * 36;
+        if (layer.valid) {
+          const long = layer.direction === 'along';
+          const positions = layout?.bedding?.rows[i].lanes ?? layout?.frameAcross.positions;
+          const centers = positions?.map(x) ?? [(left + right) / 2];
+          const half = Math.min((right - left) / 2, Math.max(layout ? 2 : 14, layer.width * scale / 2));
+          const shapes = long ? centers.map(center => [center - half, center + half]) : [[left, right]];
+          const color = layer.type === 'timber' ? '#c49870' : '#637691';
+          for (const [a, b] of shapes) {
+            if (long && ['steel', 'channel'].includes(layer.type)) {
+              const flange = Math.max(2, depth * layer.flange / layer.height);
+              const web = Math.min(b - a, Math.max(1, layer.web / layer.width * (b - a)));
+              const webStart = layer.type === 'steel' ? (a + b - web) / 2 : a;
+              rectangle(a, b, top, top + flange, color);
+              rectangle(webStart, webStart + web, top + flange, bottom - flange, color);
+              rectangle(a, b, bottom - flange, bottom, color);
+            } else {
+              rectangle(a, b, top, bottom, color);
+              if (long && layer.type === 'tube') {
+                const inset = Math.max(1, (b - a) * layer.web / layer.width);
+                const wall = Math.max(2, depth * layer.web / layer.height);
+                if (a + inset < b - inset && top + wall < bottom - wall) rectangle(a + inset, b - inset, top + wall, bottom - wall, background);
+              }
+            }
+          }
+          leader(shapes.at(-1)[1], (top + bottom) / 2, labelY, (i + 1) + ' ' + layer.name + ' · ' + layer.directionName, pitches[i]);
+        } else leader(right, (top + bottom) / 2, labelY, (i + 1) + ' ' + layer.name + ' · 尺寸待輸入');
+        top = bottom;
+      }
+    } else if (timber) rectangle(left, right, boardBottom, timberBottom, '#c49870');
+    if (!schematic && layout && steel) {
       const halfFlange = Math.max(7, steel.width * scale / 2);
       const halfWeb = Math.max(1, steel.web * scale / 2);
       const flange = Math.max(3, (steelBottom - timberBottom) * steel.flange / steel.height);
@@ -606,8 +661,8 @@ window.mountTowerFoundation = function (options) {
       leader(last + halfFlange, (timberBottom + steelBottom) / 2, 221, 'H 型鋼');
     }
     leader(innerRight, 111, 111, '大梁（局部）');
-    if (board) leader(right, (deck + boardBottom) / 2, 144, '模板');
-    if (timber) leader(right, (boardBottom + timberBottom) / 2, 179, '木角材',
+    if (boardHeight) leader(right, (deck + boardBottom) / 2, 144, '模板');
+    if (!schematic && timber) leader(right, (boardBottom + timberBottom) / 2, 179, '木角材',
       joistPitch ? '順梁間距 ' + joistPitch : '');
     measure(ctx, 'x', [left, 90], [right, 90], 30, '模板總寬 ' + mm(totalWidth) + ' mm');
     measure(ctx, 'x', [innerLeft, 90], [innerRight, 90], 64, '⑤ ' + mm(beamWidth));
@@ -714,11 +769,245 @@ window.mountTowerFoundation = function (options) {
     supportLoads = {concrete, impact, live, testLoad, safetyFactor, legsPerTestedFrame, legCapacity};
   }
 
+  const steelProfileOptions = new Map(steelProfiles.map(profile => [profile.slice(0, 4).join('×'), profile]));
+
+  function setupBeddingLayers() {
+    const list = byId('bedding-layers');
+    if (!list) return null;
+    const add = byId('add-bedding');
+    const checks = byId('bedding-checks');
+    const rows = [];
+    const types = {timber: '角木', steel: 'H 型鋼', channel: '槽鋼', tube: '方鋼管'};
+    const directions = {across: '橫梁向', along: '順梁向'};
+    const profileMap = sizes => new Map(sizes.map(size => [size.join('×'), size]));
+    const catalogs = {
+      steel: steelProfileOptions,
+      // 國凱鋼鐵黑鐵槽鋼，H × B × 腹板厚 × 翼板厚（mm）。
+      channel: profileMap([
+        [75, 40, 5, 7], [100, 50, 5, 7.5], [125, 65, 6, 8], [150, 75, 6.5, 10],
+        [180, 75, 7, 10.5], [200, 80, 7.5, 11], [200, 90, 8, 13.5], [250, 90, 9, 13],
+        [300, 90, 9, 13], [300, 90, 10, 15.5], [380, 100, 13, 16.5]
+      ]),
+      // 鑫陽鋼鐵 CNS 7141 G3134 表五，正方形鋼管邊長與管壁厚（mm）。
+      tube: profileMap([
+        [20, [1.6]], [25, [1.6, 2, 2.5]], [30, [1.6, 2]],
+        ...[35, 40, 50, 60, 65, 75].map(side => [side, [1.6, 2, 2.5, 3, 3.5, 4, 4.5, 5]]),
+        [89, [2, 2.5, 3, 3.5]], [100, [2.3, 3.2, 4, 4.5]], [125, [3.5, 4, 5]], [150, [4, 5, 6]]
+      ].flatMap(([side, thicknesses]) => thicknesses.map(thickness => [side, side, thickness])))
+    };
+
+    function relabel() {
+      rows.forEach(({heading, remove}, i) => {
+        heading.textContent = '第 ' + (i + 1) + ' 層';
+        remove.setAttribute('aria-label', '刪除第 ' + (i + 1) + ' 層墊條');
+      });
+    }
+
+    function standard(layers) {
+      return layers.length === 2 && layers[0].type === 'timber' && layers[0].direction === 'across' &&
+        layers[1].type === 'steel' && layers[1].direction === 'along';
+    }
+
+    function append(kind, direction) {
+      const item = document.createElement('li');
+      item.className = 'tower-bedding-row';
+      const header = document.createElement('header');
+      const heading = document.createElement('strong');
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'button';
+      remove.textContent = '刪除';
+      header.append(heading, remove);
+      const controls = document.createElement('div');
+      controls.className = 'tower-bedding-controls';
+      const geometry = document.createElement('div');
+      geometry.className = 'tower-bedding-controls';
+      const check = document.createElement('fieldset');
+      const checkTitle = document.createElement('legend');
+      const strength = document.createElement('div');
+      strength.className = 'tower-bedding-controls';
+      const sectionValues = document.createElement('p');
+      const result = document.createElement('div');
+      check.append(checkTitle, sectionValues, strength, result);
+      function field(parent, caption, input) {
+        const label = document.createElement('label');
+        label.append(caption, input);
+        parent.append(label);
+        return input;
+      }
+      function select(parent, caption, choices, value) {
+        const input = document.createElement('select');
+        for (const [key, name] of choices) input.add(new Option(name, key));
+        input.value = value;
+        return field(parent, caption, input);
+      }
+      function numberInput(parent, caption, value = '') {
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.step = 'any';
+        input.min = '0';
+        input.value = value;
+        return field(parent, caption, input);
+      }
+      const material = select(controls, '材料', Object.entries(types), kind);
+      const axis = select(controls, '方向', Object.entries(directions), direction);
+      item.append(header, controls, geometry);
+      const dimensionsByType = new Map();
+      function changeMaterial() {
+        const type = material.value;
+        if (!dimensionsByType.has(type)) {
+          const fields = document.createElement('div');
+          const inputs = {};
+          const catalog = catalogs[type];
+          if (catalog) {
+            const choices = [...catalog.keys()].map(size => [size, size]);
+            if (type !== 'steel') choices.unshift(['', '請選擇規格'], ['custom', '自訂尺寸']);
+            inputs.profile = select(fields, types[type] + '規格（mm）', choices, type === 'steel' ? '200×100×5.5×8' : '');
+          }
+          if (type !== 'steel') {
+            const manual = document.createElement('div');
+            manual.className = 'tower-bedding-controls tower-wide';
+            const sizes = type === 'timber' ? [['height', '高', 150], ['width', '寬', 90]]
+              : type === 'channel' ? [['height', '高'], ['width', '寬'], ['web', '腹板厚'], ['flange', '翼板厚']]
+                : [['height', '高'], ['width', '寬'], ['web', '管壁厚']];
+            for (const [key, name, value] of sizes) inputs[key] = numberInput(manual, name + '（mm）', value);
+            if (inputs.profile) {
+              const showManual = () => { manual.hidden = inputs.profile.value !== 'custom'; };
+              inputs.profile.addEventListener('change', showManual);
+              showManual();
+            }
+            fields.append(manual);
+          }
+          const propertyFields = document.createElement('div');
+          const timber = type === 'timber';
+          if (timber) inputs.wood = select(propertyFields, '角木材種', [['', '自訂材種'],
+            ...woodMaterials.map(value => [value.id, value.label])], 'chinese-fir');
+          inputs.e = numberInput(propertyFields, 'E（kgf/cm²）', timber ? '' : 2040000);
+          if (timber) {
+            inputs.fb = numberInput(propertyFields, '長期 Fb（kgf/cm²）');
+            inputs.fv = numberInput(propertyFields, '長期 Fv（kgf/cm²）');
+            const loadWood = () => {
+              const wood = woodMaterials.find(value => value.id === inputs.wood.value);
+              for (const key of ['e', 'fb', 'fv']) inputs[key].value = wood?.[key] ?? '';
+            };
+            inputs.wood.addEventListener('change', loadWood);
+            loadWood();
+          } else {
+            inputs.fy = numberInput(propertyFields, 'Fy（kgf/cm²）', 2520);
+          }
+          dimensionsByType.set(type, {inputs, fields: [...fields.children], properties: [...propertyFields.children]});
+        }
+        geometry.replaceChildren(...dimensionsByType.get(type).fields);
+        strength.replaceChildren(...dimensionsByType.get(type).properties);
+      }
+      material.addEventListener('change', changeMaterial);
+      const row = {heading, remove, material, checkTitle, sectionValues, result, read() {
+        const type = material.value;
+        const {inputs} = dimensionsByType.get(type);
+        const selected = inputs.profile?.value;
+        const profile = catalogs[type]?.get(selected);
+        const [height, width, web, flange] = profile ?? (type === 'timber' || selected === 'custom'
+          ? ['height', 'width', 'web', 'flange'].map(key => inputs[key]?.valueAsNumber) : []);
+        const required = type === 'tube' ? [height, width, web] : type === 'timber' ? [height, width] : [height, width, web, flange];
+        const valid = required.every(value => Number.isFinite(value) && value > 0) &&
+          (type !== 'tube' || 2 * web < Math.min(height, width)) &&
+          (type !== 'channel' || (web < width && 2 * flange < height));
+        const section = valid ? beddingSection(type, profile ?? required) : null;
+        const fy = inputs.fy?.valueAsNumber;
+        const timber = type === 'timber';
+        const clearWeb = height - 2 * (type === 'tube' ? web : flange);
+        return {...section, type, name: types[type], direction: axis.value, directionName: directions[axis.value],
+          woodName: inputs.wood?.selectedOptions[0]?.textContent, e: inputs.e.valueAsNumber,
+          fb: timber ? inputs.fb.valueAsNumber * 2 : fy * 0.60, fv: timber ? inputs.fv.valueAsNumber * 2 : fy * 0.40, fy,
+          shearArea: timber ? section?.A / 1.5 : clearWeb * web * (type === 'tube' ? 2 : 1) / 100,
+          referenceShearArea: height * web / 100, webSlenderness: (clearWeb - 2 * (profile?.[4] ?? 0)) / web,
+          height: height / 1000, width: width / 1000, web: web / 1000, flange: flange / 1000, valid,
+          specification: valid ? (type === 'steel' ? selected :
+            (type === 'timber' ? [width, height] : required).join(' × ')) + ' mm'
+            : inputs.profile && !selected ? '規格待選' : '尺寸待補齊'};
+      }};
+      remove.addEventListener('click', () => {
+        const i = rows.indexOf(row);
+        rows.splice(i, 1);
+        item.remove();
+        check.remove();
+        relabel();
+        (rows[i]?.material ?? rows[i - 1]?.material ?? add).focus();
+        queueSupport();
+      });
+      rows.push(row);
+      list.append(item);
+      checks.append(check);
+      changeMaterial();
+      relabel();
+      return material;
+    }
+    function reset() {
+      list.replaceChildren();
+      checks.replaceChildren();
+      rows.length = 0;
+      append('timber', 'across');
+      append('steel', 'along');
+    }
+    add.addEventListener('click', () => {
+      append('timber', rows.at(-1)?.read().direction === 'across' ? 'along' : 'across').focus();
+      queueSupport();
+    });
+    reset();
+    return {read: () => rows.map(row => row.read()), standard, fillExample: reset, render(layers, layout) {
+      const reference = standard(layers);
+      const automatic = (layout.armFrames ?? []).map(arm => [arm.arm, window.TowerSupport.getMaterialChecks(layout, arm)]);
+      const display = value => Number.isFinite(value) ? detailFormat.format(value) : '—';
+      return layers.map((layer, i) => {
+        const row = rows[i];
+        row.checkTitle.textContent = '第 ' + (i + 1) + ' 層 ' + layer.name + '檢核';
+        const shearArea = reference ? (layer.type === 'timber' ? layer.A : layer.referenceShearArea) : layer.shearArea;
+        row.sectionValues.textContent = [layer.specification, layer.directionName,
+          'Z ' + display(layer.Z) + ' cm³', 'I ' + display(layer.I) + ' cm⁴', 'A ' + display(layer.A) + ' cm²',
+          '受剪面積 ' + display(shearArea) + ' cm²',
+          ...(['tube', 'channel'].includes(layer.type) ? ['名目斷面（直角近似）'] : []),
+          (layer.type === 'timber' ? '短期 ' : '初估 ') + 'Fb ' + display(layer.fb) + '／Fv ' + display(layer.fv) + ' kgf/cm²'
+        ].join(' · ');
+        const results = automatic.flatMap(([arm, data]) => (data.bedding?.[i] ?? data[layer.type])
+          .map(criterion => ({arm, ...criterion})));
+        row.result.replaceChildren();
+        if (!results.length) {
+          row.result.textContent = automatic.length ? '本層由同向墊條連續承托，荷載直接傳至下層。'
+            : '抗彎、抗剪、撓度等候符合條件的自動配置。';
+        } else {
+          const table = document.createElement('table');
+          table.className = 'tower-bedding-results';
+          const head = table.createTHead().insertRow();
+          const fromReactions = results.some(({force}) => Number.isFinite(force));
+          const headers = ['項目', '檢核跨長（mm）', ...(fromReactions ? ['跨內荷載（tf）'] : []), '需求／容許', '利用率'];
+          for (const caption of headers) {
+            const column = document.createElement('th');
+            column.scope = 'col';
+            column.textContent = caption;
+            head.append(column);
+          }
+          const body = table.createTBody();
+          for (const {arm, criterion, demand, limit, cantilever, span, force} of results) {
+            const entry = body.insertRow();
+            const unit = criterion === '撓度' ? 'mm' : 'kgf/cm²';
+            const scale = criterion === '撓度' ? 10 : 1;
+            const status = display(demand / limit * 100) + '% ' + (demand <= limit ? '通過' : '超限');
+            for (const value of [(arm ? arm.toUpperCase() + ' 梁 ' : '') + (cantilever ? '懸臂 ' : '') + criterion,
+              display(span * 1000), ...(fromReactions ? [display(force)] : []),
+              display(demand * scale) + '／' + display(limit * scale) + ' ' + unit, status]) entry.insertCell().textContent = value;
+          }
+          row.result.append(table);
+        }
+        return results;
+      });
+    }};
+  }
+
   function setupMaterials() {
     const sectionFormat = new Intl.NumberFormat('zh-TW', {maximumSignificantDigits: 7});
     const steelSize = byId('steel-size');
-    const profileOptions = new Map(steelProfiles.map(profile => [profile.slice(0, 4).join('×'), profile]));
-    for (const size of profileOptions.keys()) steelSize.add(new Option('H ' + size, size));
+    const profileOptions = steelProfileOptions;
+    for (const size of profileOptions.keys()) steelSize?.add(new Option('H ' + size, size));
     const woodOptions = new Map(woodMaterials.map(material => [material.id, material]));
     const boardNote = byId('formwork-board-note');
     const sectionUpdates = [];
@@ -853,8 +1142,18 @@ window.mountTowerFoundation = function (options) {
       return {...section, ...strengths, ...dimensions, shearArea: shearArea ?? section.A / 1.5};
     }
     return () => {
-      refreshSteelStress();
+      refreshSteelStress?.();
       for (const updateSection of sectionUpdates) updateSection();
+      const board = material('formwork', {height: byId('formwork-thickness').valueAsNumber / 1000});
+      if (beddingEditor) {
+        const layers = beddingEditor.read();
+        const standard = beddingEditor.standard(layers);
+        const [timber, girder] = standard ? layers : [];
+        const steel = girder?.valid ? {...girder, fb: girder.fy * 0.60, fv: girder.fy * 0.40,
+          shearArea: girder.referenceShearArea} : null;
+        return {board, layers, timber: timber?.valid ? timber : null, steel, layered: standard ? undefined : layers,
+          beddingIssue: layers.some(layer => !layer.valid) ? '請補齊各層墊條的有效尺寸。' : ''};
+      }
       const profile = profileOptions.get(steelSize.value);
       let steel = null;
       if (profile) {
@@ -862,7 +1161,7 @@ window.mountTowerFoundation = function (options) {
         steel = material('steel', {height, width, web, flange, fy: byId('steel-fy').valueAsNumber,
           webSlenderness: (height - 2 * flange - 2 * fillet) / web}, height * web * 10000);
       }
-      return {steel, board: material('formwork', {height: byId('formwork-thickness').valueAsNumber / 1000}),
+      return {steel, board,
         timber: material('timber', {height: byId('timber-height').valueAsNumber / 1000,
           width: byId('timber-width').valueAsNumber / 1000})};
     };
@@ -1015,7 +1314,7 @@ window.mountTowerFoundation = function (options) {
         : platformLoad.value === '' ? supportLoads.live : platformLoad.valueAsNumber;
       platformLoad.setAttribute('aria-invalid', String(!platformLoad.validity.valid));
       layout = currentShape
-        ? window.TowerSupport.plan(currentShape, {...supportLoads, ...materials, platformPressure, sideExtension, endExtension,
+        ? materials.beddingIssue ? {message: materials.beddingIssue} : window.TowerSupport.plan(currentShape, {...supportLoads, ...materials, platformPressure, sideExtension, endExtension,
           groundProfiles, materialMethod, endBayAtStart, allowedPartCodes, fixedNeighborRule},
           catalog, buildFrame)
         : {message: '請先修正梁的尺寸設定。'};
@@ -1034,6 +1333,7 @@ window.mountTowerFoundation = function (options) {
       }
     }
     const hasLayout = !layout.message;
+    const beddingResults = materials?.layers ? beddingEditor.render(materials.layers, layout) : undefined;
     showPartTotal(layout);
     if (currentShape) {
       drawSection(currentShape, south, north, endExtension * 1000, hasLayout ? model : null);
@@ -1049,7 +1349,7 @@ window.mountTowerFoundation = function (options) {
     supportStatus.textContent = layout.message ?? (manual ? '已重新檢核各梁。' : '') + configured;
     previewStatus.textContent = layout.message ?? [configured, groupNotice, ...layout.unconfigured].filter(Boolean).join(' ');
     previewStatus.hidden = false;
-    byId('preview-material-example').hidden = !layout.missingMaterials;
+    byId('preview-material-example').hidden = !(layout.missingMaterials || materials?.beddingIssue);
     supportResults.hidden = !hasLayout;
     supportIssues.textContent = hasLayout ? [groupNotice, ...layout.unconfigured,
       ...new Set(layout.armFrames.flatMap(({frame}) => frame.issues))].filter(Boolean).join(' ') : '';
@@ -1080,6 +1380,10 @@ window.mountTowerFoundation = function (options) {
         }
         field.replaceChildren(list);
       }
+      const supportSpanLabel = byId('steel-support-span').previousElementSibling;
+      supportSpanLabel.textContent = layout.layered ? '底層墊條採用最大支距（水平）' : 'H 型鋼最大容許支距（水平）';
+      const joistPitchLabel = byId('support-joist-pitch').previousElementSibling;
+      joistPitchLabel.textContent = layout.layered ? '首層墊條最大設計間距' : '木角材中心間距';
       showByArm('steel-support-span', ({steelSupportSpan}) =>
         Number.isFinite(steelSupportSpan) ? detailFormat.format(steelSupportSpan) + ' m' : '無線載重');
       showByArm('support-longitudinal', ({x}) => {
@@ -1107,7 +1411,7 @@ window.mountTowerFoundation = function (options) {
       showLegend(model);
       showMember(null);
     }
-    return {shape: currentShape, loads: supportLoads, materials, layout, sideExtension, endExtension, materialMethod, endBayAtStart,
+    return {shape: currentShape, loads: supportLoads, materials, layout, beddingResults, sideExtension, endExtension, materialMethod, endBayAtStart,
       platformPressure, warnings: supportIssues.textContent};
   }
 
@@ -1132,8 +1436,9 @@ window.mountTowerFoundation = function (options) {
           figures.assembly = null;
         }
       }
-      const wood = key => byId(key + '-wood').selectedOptions[0].textContent.trim();
-      window.TowerReport.open(preview, {...report, groundProfiles, figures, woodNames: {board: wood('formwork'), timber: wood('timber')}});
+      const wood = key => byId(key + '-wood')?.selectedOptions[0]?.textContent.trim();
+      window.TowerReport.open(preview, {...report, groundProfiles, figures,
+        woodNames: {board: wood('formwork'), timber: report.materials.timber?.woodName ?? wood('timber') ?? '角木'}});
     } catch (failure) {
       preview?.close();
       status.textContent = '無法製作計算書。' + failure.message;
@@ -1167,16 +1472,19 @@ window.mountTowerFoundation = function (options) {
   }
 
   function fillSupportExample() {
+    beddingEditor?.fillExample();
     for (const [id, value] of Object.entries({
       'formwork-thickness': '21', 'timber-width': '90', 'timber-height': '150',
       'steel-size': '200×100×5.5×8', 'steel-e': '2040000', 'steel-fy': '2520'
     })) {
       const field = byId(id);
+      if (!field) continue;
       field.value = value;
       field.dispatchEvent(new Event('input', {bubbles: true}));
     }
     for (const id of ['formwork-wood', 'timber-wood']) {
       const field = byId(id);
+      if (!field) continue;
       field.value = 'chinese-fir';
       field.dispatchEvent(new Event('change', {bubbles: true}));
     }
@@ -1225,6 +1533,7 @@ window.mountTowerFoundation = function (options) {
     button.disabled = !viewer.available;
     button.addEventListener('click', () => selectView(button.dataset.view));
   }
+  const beddingEditor = setupBeddingLayers();
   const readMaterials = setupMaterials();
   const readSupportParts = setupSupportPartSelection();
   const setGroundControlsEnabled = setupGroundEditor();

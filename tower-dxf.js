@@ -5,6 +5,8 @@
   const xy = (group, [x, y]) => [group, x, group + 10, y, group + 20, 0];
   const angle = (x, y) => Math.atan2(y, x) * 180 / Math.PI;
   const sectionLinkRise = {rail: 12.7234, brace: 4.9001};
+  const swivelHingeDepth = 66;
+  const isUpperJack = code => code === 'U48601' || code === 'U63601S';
 
   function createDrawing() {
     const library = root.TowerDxfBlocks;
@@ -100,13 +102,17 @@
     return {block, put, line, polyline, circle, text, insert, hasBlock, schematic, serialize};
   }
 
-  function exportDrawing({shape, layout, endExtension = 0, sideExtension = 0, groundProfiles = {}}) {
+  function exportDrawing({shape, layout, materials, endExtension = 0, sideExtension = 0, groundProfiles = {}}) {
     if (!shape) throw new Error('請先填寫有效的電塔尺寸。');
     if (!root.TowerDxfBlocks) throw new Error('DXF 圖塊資料未載入。');
     const {beamArms, beamRotations, groundStations} = root.TowerFoundation;
     const {radius, length, clearance, top, outerSoffit, halfWidth, chord, projection, pier} = shape;
     const {line, polyline, circle, text, insert, block, hasBlock, schematic, serialize} = createDrawing();
     const family = new Map((layout?.armFrames ?? []).map(frame => [frame.arm, frame]));
+    const bedding = materials?.layers;
+    const stack = [['FORMWORK', materials?.board ?? layout?.board], ...(bedding
+      ? bedding.map(layer => [layer.type === 'timber' ? 'TIMBER' : 'STEEL', layer])
+      : [['TIMBER', layout?.timber], ['STEEL', layout?.steel]])];
     const extent = length / 2 + endExtension * 1000;
     const groundLength = projection + endExtension * 1000;
     const textHeight = Math.max(80, extent / 62);
@@ -118,6 +124,8 @@
     const orient = arm => point => project(beamRotations[beamArms.indexOf(arm)]([...point, 0]));
     const prefix = (arm, item) => arm.toUpperCase() + ' ' + item;
     const sectionGround = new Map(beamArms.map(arm => [arm, groundStations(groundProfiles[arm], groundLength)]));
+    const steelSlope = projection ? (outerSoffit - clearance) / projection : 0;
+    const seatAlong = armFrame => (armFrame.bedding?.rows.at(-1)?.direction ?? bedding?.at(-1)?.direction) !== 'across';
 
     function labelDimension(a, b, offset, label) {
       const dx = b[0] - a[0], dy = b[1] - a[1];
@@ -251,9 +259,18 @@
         const side = outward * (along ? Math.sign(to[0] - from[0]) : -Math.sign(to[1] - from[1]));
         insertPlanPart(member, world(from), world(to), kind, side);
       }
+      const alongSeat = seatAlong(armFrame);
+      const [ux, uy] = toXY(alongSeat ? [1, 0] : [0, 1]);
+      const pitch = alongSeat ? Math.atan(steelSlope) : 0;
+      for (const member of frame.members) {
+        if (!isUpperJack(member.code)) continue;
+        const [x, y] = world(member.end);
+        const shift = swivelHingeDepth * Math.sin(pitch);
+        insert('SUPPORT', block('P_U63601S'), [x - ux * shift, y - uy * shift], Math.cos(pitch), 1, angle(ux, uy));
+      }
     }
 
-    function sectionPart(member, mapPoint) {
+    function sectionPart(member, mapPoint, alongSeat, slope) {
       const spec = layout.parts.get(member.code);
       const [from, to] = discConnections(member, spec?.kind);
       const a = mapPoint(from), b = mapPoint(to);
@@ -265,9 +282,19 @@
         insert('SUPPORT', block('E_J48601_PLATE'), a);
         insert('SUPPORT', block('E_J48601_NUT'), b);
         for (const x of [-24.1, 24.1]) line('SUPPORT', [a[0] + x, a[1] + 6], [b[0] + x, b[1] - 35]);
-      } else if (member.code === 'U48601') {
-        insert('SUPPORT', block('E_U48601_HEAD'), b);
-        if (b[1] - a[1] > 106) for (const x of [-24.1, 24.1]) line('SUPPORT', [a[0] + x, a[1]], [b[0] + x, b[1] - 106]);
+      } else if (isUpperJack(member.code)) {
+        const suffix = alongSeat ? 'ALONG' : 'ACROSS';
+        const pitch = Math.atan(alongSeat ? slope : 0);
+        // The load-bearing face meets the steel underside on the post axis. Only the hinged seat pitches.
+        const pivot = [b[0], b[1] - swivelHingeDepth / Math.cos(pitch)];
+        const stemTop = pivot[1] + swivelHingeDepth;
+        const library = root.TowerDxfBlocks;
+        const upright = block('E_U63601S_STEM_' + suffix,
+          [...library.E_U63601S_STEM, ...library['E_U63601S_PIN_' + suffix]]);
+        const seat = block('E_U63601S_SEAT_' + suffix, undefined, swivelHingeDepth);
+        insert('SUPPORT', upright, [b[0], stemTop]);
+        insert('SUPPORT', seat, pivot, 1, 1, pitch * 180 / Math.PI);
+        if (stemTop - a[1] > 106) for (const x of [-24.1, 24.1]) line('SUPPORT', [a[0] + x, a[1]], [b[0] + x, stemTop - 106]);
       } else if (hasBlock(name)) {
         if (spec?.kind === 'rail' || spec?.kind === 'brace') {
           const dx = b[0] - a[0];
@@ -283,7 +310,11 @@
       }
     }
 
-    const groundMin = Math.min(0, outerSoffit, ...[...sectionGround.values()].flat().map(([, z]) => z));
+    const stackDepth = stack.reduce((depth, [, material]) => depth +
+      (Number.isFinite(material?.height) && material.valid !== false ? mm(material.height) : 0), 0);
+    const endSoffit = projection > 0 ? clearance + (outerSoffit - clearance) * groundLength / projection : outerSoffit;
+    const groundMin = Math.min(0, Math.min(clearance, endSoffit) - stackDepth,
+      ...[...sectionGround.values()].flat().map(([, z]) => z));
     const highest = Math.max(top + (pier?.height ?? 0), ...[...sectionGround.values()].flat().map(([, z]) => z));
     function section(left, right, datum) {
       const toXY = ([x, z]) => [x, z + datum];
@@ -324,25 +355,33 @@
           text([labelX, labelY], dimensionNumber(x) + ': ' + z.map(dimensionNumber).join(' → '), textHeight * 0.8);
         }
         const armFrame = family.get(arm);
-        if (!armFrame) continue;
         let depth = 0;
-        for (const [layer, material] of [['FORMWORK', layout.board], ['TIMBER', layout.timber], ['STEEL', layout.steel]]) {
-          const start = mm(layout.soffit(0)) - depth;
-          const end = mm(layout.soffit(layout.totalLength)) - depth;
+        for (const [i, [layer, material]] of stack.entries()) {
+          if (!Number.isFinite(material?.height) || material.height <= 0 || material.valid === false) break;
+          const start = clearance - depth;
+          const end = endSoffit - depth;
           depth += mm(material.height);
-          localOutline(layer, [[radius, start], [extent, end], [extent, end - mm(material.height)], [radius, start - mm(material.height)]]);
+          const configured = armFrame?.bedding?.rows[i - 1];
+          const segments = configured?.direction === 'across' ? configured.lanes.map(lane =>
+            [mm(lane - material.width / 2), mm(lane + material.width / 2)]) : [[0, groundLength]];
+          for (const [a, b] of segments) {
+            const z = x => groundLength ? start + (end - start) * (configured?.direction === 'across' ? (a + b) / 2 : x) / groundLength : start;
+            localOutline(layer, [[radius + a, z(a)], [radius + b, z(b)],
+              [radius + b, z(b) - mm(material.height)], [radius + a, z(a) - mm(material.height)]]);
+          }
         }
+        if (!armFrame) continue;
         const along = armFrame.frameAlong.positions;
-        for (const member of armFrame.frame.members) {
-          if (Math.abs(member.start[1]) > 1e-7 || Math.abs(member.end[1]) > 1e-7) continue;
-          sectionPart(member, ([x, , z]) => local([radius + mm(along[0] + x), mm(z)]));
-        }
+        const sectionMembers = armFrame.frame.members.filter(member =>
+          Math.abs(member.start[1]) <= 1e-7 && Math.abs(member.end[1]) <= 1e-7);
+        const mapPoint = ([x, , z]) => local([radius + mm(along[0] + x), mm(z)]);
+        for (const member of sectionMembers) sectionPart(member, mapPoint, seatAlong(armFrame), sign * steelSlope);
         for (let i = 1; i < along.length; i++) {
           labelDimension(local([radius + mm(along[i - 1]), groundMin]), local([radius + mm(along[i]), groundMin]),
             -sign * spacing * 0.62, dimensionNumber(mm(armFrame.frameAlong.gaps[i - 1])));
         }
       }
-      text(toXY([0, groundMin - spacing * 2.9]), '順梁剖面取外側一排支撐', textHeight * 0.8);
+      text(toXY([0, groundMin - spacing * 2.9]), family.size ? '順梁剖面取外側一排支撐' : '順梁剖面示意', textHeight * 0.8);
     }
 
     const maxPoints = Math.max(...[...sectionGround.values()].map(points => points.length));
@@ -356,8 +395,10 @@
       text([0, noteY], '未配置大梁：' + beamArms.filter(arm => !family.has(arm)).sort().join('、').toUpperCase(), textHeight);
     }
     if (schematic.size) text([0, noteY - spacing], '下列料號無對應圖塊，採示意線：' + [...schematic].sort().join('、'), textHeight);
+    if (bedding) bedding.forEach((layer, i) => text([0, noteY - spacing * (2 + i * 0.7)],
+      '第 ' + (i + 1) + ' 層 ' + layer.name + '　' + layer.directionName + '　' + layer.specification, textHeight));
     const bound = extent + spacing * 5.8;
-    return {content: serialize({min: [-bound, noteY - spacing * 2], max: [bound, bound]}),
+    return {content: serialize({min: [-bound, noteY - spacing * (2 + (bedding?.length ?? 0) * 0.7)], max: [bound, bound]}),
       schematicParts: [...schematic].sort()};
   }
 

@@ -179,7 +179,7 @@
     return beamArea * pressure + (totalArea - beamArea) * platformPressure;
   }
 
-  function legLoads(frame, along, across, parts, pressure, platformPressure) {
+  function legLoads(frame, along, across, parts, pressure, platformPressure, footLoads) {
     const masses = new Map();
     for (const member of frame.members) {
       const halfWeight = (parts.get(member.code)?.weight ?? 0) / 2;
@@ -195,13 +195,14 @@
       for (const [j, y] of across.positions.entries()) {
         const point = pointKey([x - along.positions[0], y - across.positions[0]]);
         const mass = masses.get(point) ?? 0;
-        const load = supportedLoad(along.strips[i], across.strips[j], pressure, platformPressure) + mass / 1000;
+        const transferredLoad = footLoads?.[i][j];
+        const load = (transferredLoad ?? supportedLoad(along.strips[i], across.strips[j], pressure, platformPressure)) + mass / 1000;
         byPoint.set(point, load);
         if (load > maximum) {
           maximum = load;
           const beamArea = along.strips[i].beam * across.strips[j].beam;
           const totalArea = along.strips[i].total * across.strips[j].total;
-          governingLeg = {x, y, beamArea, extensionArea: totalArea - beamArea, frameLoad: mass / 1000, load};
+          governingLeg = {x, y, beamArea, extensionArea: totalArea - beamArea, frameLoad: mass / 1000, load, transferredLoad};
         }
       }
     }
@@ -470,7 +471,7 @@
     return {members, products, issues: [...issues]};
   }
 
-  function plan(shape, {concrete, impact, live, legCapacity, board, timber, steel,
+  function plan(shape, {concrete, impact, live, legCapacity, board, timber, steel, layered,
     sideExtension = 0.9, endExtension = 0, platformPressure = live, groundProfiles = {}, materialMethod,
     endBayAtStart = false, allowedPartCodes, fixedNeighborRule = false}, catalog, buildFrame) {
     if (!(shape.projection > 0)) return {message: '梁突出長度為 0，無需配置外伸梁支撐。'};
@@ -482,13 +483,17 @@
     }
     if (!sideExtension && !endExtension) platformPressure = 0;
     if (!Number.isFinite(platformPressure) || platformPressure < 0) return {message: '施工平台延伸區面載重須為大於或等於 0 的數值。'};
-    const missingMaterials = [['模板', board], ['木角材', timber], ['型鋼', steel]].flatMap(([name, material]) => {
+    const selectedMaterials = layered ? layered.map((layer, i) => ['第 ' + (i + 1) + ' 層 ' + layer.name, layer])
+      : [['木角材', timber], ['型鋼', steel]];
+    const missingMaterials = [['模板', board], ...selectedMaterials].flatMap(([name, material]) => {
       if (!material) return [name + '尺寸'];
-      const missing = [['e', 'E'], ['fb', 'Fb'], ['fv', 'Fv']]
+      const missing = [['e', 'E'], ['fb', 'Fb'], ['fv', 'Fv'], ...(layered ? [['Z', 'Z'], ['I', 'I'], ['shearArea', '受剪面積']] : [])]
         .filter(([key]) => !(Number.isFinite(material[key]) && material[key] > 0)).map(([, label]) => label);
       return missing.length ? [name + ' ' + missing.join('、')] : [];
     });
     if (missingMaterials.length) return {missingMaterials: true, message: '請補齊' + missingMaterials.join('；') + '，再產生支撐架。'};
+    if (layered && !layered.length) return {message: '請至少新增一層墊條，再自動配置支撐架。'};
+    if (layered?.at(-1)?.width > 0.158 + tolerance) return {message: '底層墊條寬度超過 U48601 上調整座的模型槽內寬 158 mm。'};
 
     const length = shape.projection / 1000;
     const totalLength = length + endExtension;
@@ -497,7 +502,7 @@
     if (width / 2 + sideExtension > radius + tolerance) {
       return {message: '目前井桶直徑及梁寬會使井桶旁的 ' + sideExtension * 100 + ' cm 兩側延伸區重疊。'};
     }
-    const layerDepth = board.height + timber.height + steel.height;
+    const layerDepth = board.height + (layered ?? [timber, steel]).reduce((depth, layer) => depth + layer.height, 0);
     const slope = (shape.outerSoffit - shape.clearance) / shape.projection;
     const slopeLengthFactor = Math.hypot(1, slope);
     const soffit = distance => shape.clearance / 1000 + slope * distance;
@@ -506,7 +511,7 @@
     const {beamArms, groundElevation, groundStations} = root.TowerFoundation;
     const shortArms = new Set(beamArms.filter(arm => groundStations(groundProfiles[arm], totalLength * 1000)
       .some(([distance, elevation]) => soffit(distance / 1000) - elevation / 1000 <= layerDepth)));
-    if (steel.webSlenderness > 100 / Math.sqrt(steel.fy / 1000)) {
+    if ((layered ?? [steel]).some(layer => layer.webSlenderness > 100 / Math.sqrt(layer.fy / 1000))) {
       return {message: '所選型鋼腹板深厚比超出基準剪應力的適用範圍，請選擇其他規格或另行檢核。'};
     }
     const available = allowedPartCodes ? catalog.filter(part => allowedPartCodes.has(part.code)) : catalog;
@@ -527,13 +532,14 @@
 
     // Maximum one-way span limits for the 1 m board strip.
     const boardLine = Math.max(pressure, platformPressure) * 10;
-    const boardSpan = (materialMethod ? materialMethod.spanLimit('board', board, boardLine) : Math.min(
+    const boardActualSpan = materialMethod ? materialMethod.spanLimit('board', board, boardLine) : Math.min(
       Math.sqrt(8 * board.fb * board.Z / boardLine),
       2 * board.fv * board.shearArea / boardLine,
       Math.cbrt(384 * board.e * board.I / (5 * deflectionRatio * boardLine))
-    ) / 100) / slopeLengthFactor;
+    ) / 100;
+    const boardSpan = boardActualSpan / slopeLengthFactor;
     const centimetres = (value, digits = 1) => (value * 100).toFixed(digits) + ' cm';
-    if (boardSpan < timber.width - tolerance) {
+    if (!layered && boardSpan < timber.width - tolerance) {
       return {message: '目前載重下模板容許板跨上限為 ' + centimetres(boardSpan, 2) +
         '，小於木角材寬 ' + centimetres(timber.width) + '，無法排入角材。'};
     }
@@ -544,6 +550,19 @@
     for (const y of across) {
       if (sideExtension && Math.max(y.positions[0], y.endMargin) > sideExtension / 2 + tolerance) continue;
       const frameAcross = extendAxis(y, width, sideExtension, sideExtension);
+      if (layered) {
+        for (const {x, frameAlong} of along) {
+          const legCount = frameAlong.positions.length * frameAcross.positions.length;
+          if (legCount > 400) continue;
+          const bedding = materialMethod.layoutBedding(layered, frameAlong.positions, frameAcross.positions,
+            {length, width, totalLength, extension: sideExtension, pressure, platform: platformPressure,
+              boardSpan: boardActualSpan, slope: slopeLengthFactor});
+          if (!bedding || bedding.footLoads.some(row => row.some(load => load > legCapacity + tolerance))) continue;
+          grids.push({x, y, frameAlong, frameAcross, legCount, bedding, joistSpans: bedding.rows[0].lanes.length - 1,
+            joistPitch: bedding.boardGap / (layered[0].direction === 'across' ? slopeLengthFactor : 1)});
+        }
+        continue;
+      }
       let timberCheck = timberPitch(timber, frameAcross.positions, width, sideExtension, pressure, platformPressure);
       let timberChecks = timberCheck.checks;
       if (endExtension) {
@@ -649,7 +668,7 @@
                 frame = fitFrame(frameAlong.gaps, frameAcross.gaps, tops[0], tops.at(-1), levels);
               }
               if (frame) {
-                const {maximum, byPoint, governingLeg} = legLoads(frame, frameAlong, frameAcross, parts, pressure, platformPressure);
+                const {maximum, byPoint, governingLeg} = legLoads(frame, frameAlong, frameAcross, parts, pressure, platformPressure, grid.bedding?.footLoads);
                 fitted.set(key, {frame, peakLegLoad: maximum, legLoadsByPoint: byPoint, governingLeg});
               } else {
                 fitted.set(key, null);
@@ -669,9 +688,9 @@
           assembled.add(arm);
           if (result.peakLegLoad > legCapacity + tolerance) continue;
           pending.delete(arm);
-          const steelLine = Math.max(...grid.steelLineLoads) * 10;
-          const steelSupportSpan = materialMethod ? materialMethod.spanLimit('steel', steel, steelLine) / slopeLengthFactor
-            : maximumSteelSupportSpan(steel, steelLine, grid.screening.spanOffset, slopeLengthFactor, frameAlong.nominal);
+          const steelSupportSpan = grid.bedding ? grid.bedding.bottomSpan : materialMethod
+            ? materialMethod.spanLimit('steel', steel, Math.max(...grid.steelLineLoads) * 10) / slopeLengthFactor
+            : maximumSteelSupportSpan(steel, Math.max(...grid.steelLineLoads) * 10, grid.screening.spanOffset, slopeLengthFactor, frameAlong.nominal);
           armFrames.push({arm, ...grid, ...result, steelSupportSpan});
         }
         if (!candidates.some(arm => pending.has(arm))) break;
@@ -683,14 +702,15 @@
         : splitEligible.has(arm) ? '現有架材與下調整座行程內，找不到可用同高圓盤連接的分組。'
         : heightFailures.get(arm) ?? '目前沒有同時符合材料、單支荷載及制式間距的組合。'));
     if (!armFrames.length) return {message: unconfigured.join(' ')};
-    const modelMemberCount = armFrames.reduce((count, {frame, joistSpans, frameAcross}) =>
-      count + frame.members.length + 2 + joistSpans + frameAcross.positions.length, 9);
+    const modelMemberCount = armFrames.reduce((count, {frame, bedding, joistSpans, frameAcross}) =>
+      count + frame.members.length + 1 + (bedding ? bedding.rows.reduce((sum, layer) => sum + layer.lanes.length, 0)
+        : 1 + joistSpans + frameAcross.positions.length), 9);
     if (modelMemberCount > 6000) return {message: '候選配置超出 3D 實體圖可顯示的桿件數量。'};
     armFrames.sort((a, b) => a.arm.localeCompare(b.arm));
     const peakLegLoad = Math.max(...armFrames.map(arm => arm.peakLegLoad));
     const legCount = armFrames.reduce((count, arm) => count + arm.legCount, 0);
     return {armFrames, unconfigured, legCount, length, totalLength, width, radius, soffit, pressure,
-      sideExtension, endExtension, platformPressure, peakLegLoad, legCapacity, parts, board, timber, steel, materialMethod};
+      sideExtension, endExtension, platformPressure, peakLegLoad, legCapacity, parts, board, timber, steel, materialMethod, layered};
   }
 
   function addToModel(base, layout) {
@@ -700,9 +720,9 @@
     const members = [...base.members];
     const {memberCategories: categories, beamArms, beamRotations} = root.TowerFoundation;
     const colors = {...base.colors};
-    for (const {arm, frame, frameAlong, frameAcross, steelLineLoads, joistSpans, joistPitch, screening, legLoadsByPoint} of armFrames) {
+    for (const {arm, frame, frameAlong, frameAcross, steelLineLoads, joistSpans, joistPitch, screening, legLoadsByPoint, bedding} of armFrames) {
       const orient = beamRotations[beamArms.indexOf(arm)];
-      const saddleAxis = orient([1, 0, 0]);
+      const saddleAxis = orient(bedding?.rows.at(-1).direction === 'across' ? [0, 1, 0] : [1, 0, 0]);
       const local = ([a, b, z]) => [a + radius + frameAlong.positions[0], b + frameAcross.positions[0] - width / 2, z];
       for (const member of frame.members) {
         const part = parts.get(member.code);
@@ -718,7 +738,7 @@
         if (part?.rise > 0) facts.push(['制式高差', part.rise, 'm']);
         const jack = category === 'upperJack' || category === 'lowerJack';
         facts.push([jack ? '調整座伸出量' : '模型端點距離', modelLength, 'm']);
-        if (category === 'upperJack') facts.push(['U 槽方向', saddleAxis[0] ? '沿 X 向型鋼' : '沿 Y 向型鋼', '']);
+        if (category === 'upperJack') facts.push(['U 槽方向', saddleAxis[0] ? '沿 X 向墊條' : '沿 Y 向墊條', '']);
         if (part?.weight > 0) facts.push([category === 'fixedBase' && !part.kind ? '下底座估算單重' : '資料庫單重', part.weight, 'kg']);
         const legLoad = legLoadsByPoint.get(pointKey(member.start));
         const supportedLeg = category !== 'rail' && category !== 'brace' && Number.isFinite(legLoad);
@@ -749,6 +769,25 @@
         colors[code] = categories[category].color;
         members.push({code, ...mesh, inspection: {category, arm, facts, loads,
           note: '利用率取彎曲、剪力與撓度檢核的控制值。'}});
+      }
+      if (bedding) {
+        addLayer('tower-form-panel', 'formwork', prism(0, totalLength, -extendedHalfWidth, extendedHalfWidth, 0, board.height),
+          [['厚度', board.height * 1000, 'mm'], ['板跨', bedding.boardGap, 'm']], [['梁下估算面載重', pressure, 'tf/m²']]);
+        let depth = board.height;
+        for (const [i, layer] of bedding.rows.entries()) {
+          const along = layer.direction === 'along';
+          for (const lane of layer.lanes) {
+            const center = along ? lane - width / 2 : lane;
+            const half = layer.width / 2;
+            const mesh = along ? prism(0, totalLength, center - half, center + half, depth, layer.height)
+              : prism(center - half, center + half, -extendedHalfWidth, extendedHalfWidth, depth, layer.height);
+            addLayer('tower-bedding-' + (i + 1), layer.type === 'timber' ? 'timber' : 'steel', mesh,
+              [['材料', layer.name, ''], ['規格', layer.specification, ''], ['方向', layer.directionName, '']],
+              layer.checks.map(({criterion, ratio}) => [criterion + '利用率', ratio * 100, '%']));
+          }
+          depth += layer.height;
+        }
+        continue;
       }
       addLayer('tower-form-panel', 'formwork',
         prism(0, totalLength, -extendedHalfWidth, extendedHalfWidth, 0, board.height),
@@ -802,6 +841,8 @@
   }
 
   function getMaterialChecks(layout, arm) {
+    if (arm.bedding) return {board: layout.materialMethod.checks('board', layout.board, arm.bedding.boardGap,
+      Math.max(layout.pressure, layout.platformPressure) * 10), bedding: arm.bedding.rows.map(layer => layer.checks)};
     const {screening, steelLineLoads, joistPitch} = arm;
     const steelLine = Math.max(...steelLineLoads) * 10 * screening.steelFactor;
     const {materialMethod} = layout;
