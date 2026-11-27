@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>支撐架桿件計算</title>
-  <link rel="stylesheet" href="tower-foundation.css">
+  <link rel="stylesheet" href="tower-foundation.css?v=20261127b">
   <style>
     :root {
       color-scheme: light;
@@ -573,35 +573,17 @@
             </label>
             <p class="tower-detail">斷面採 1 m 寬板帶，沿板厚方向受彎。</p>
           </fieldset>
-          <fieldset data-material="timber">
-            <legend>木角材</legend>
-            <label for="tower-timber-wood">木角材材種
-              <select id="tower-timber-wood" aria-describedby="tower-wood-reference">
-                <option value="">自訂／手動輸入</option>
-              </select>
-            </label>
-            <p class="tower-material-label">木角材尺寸（mm）</p>
-            <div class="tower-material-dimensions">
-              <label for="tower-timber-height">高
-                <input id="tower-timber-height" type="number" min="0" step="any">
-              </label>
-              <label for="tower-timber-width">寬
-                <input id="tower-timber-width" type="number" min="0" step="any">
-              </label>
-            </div>
+          <fieldset aria-labelledby="tower-bedding-title">
+            <legend id="tower-bedding-title">模板下墊條</legend>
+            <p class="tower-detail">由上往下排列，最上層緊貼模板。順梁向沿梁長，橫梁向跨梁寬。</p>
+            <ol id="tower-bedding-layers" class="tower-bedding-layers"></ol>
+            <div><button class="button" id="tower-add-bedding" type="button">新增墊條</button></div>
           </fieldset>
-          <fieldset data-material="steel">
-            <legend>型鋼</legend>
-            <label for="tower-steel-size">型鋼尺寸（mm）
-              <select id="tower-steel-size"><option value="">請選擇 H 型鋼規格</option></select>
-            </label>
-            <p class="tower-detail">規格依序為 H × B × 腹板厚 × 翼板厚，斷面含內圓角。Z、I 採強軸 X–X。
-              <a href="https://www.tunghosteel.com/Files/papp/400/%E5%9E%8B%E9%8B%BC%E7%B0%A1%E6%98%93%E9%9B%BB%E5%AD%90%E5%9E%8B%E9%8C%84%282025%E7%89%88%29.pdf" target="_blank" rel="noopener">東和鋼鐵型錄</a>
-            </p>
-            <p id="tower-steel-stress-note" class="tower-detail">基準值 Fb＝0.60fy、Fv＝0.40fy。構材設計值須依側向支撐間距及腹板深厚比檢核。
-              <a href="https://www.nlma.gov.tw/uploads/files/91bbcbd01a38582e6c5b1f00dd367683.pdf" target="_blank" rel="noopener">鋼結構容許應力設計法第 7 章</a>
-            </p>
-          </fieldset>
+          <h4>墊條逐層檢核</h4>
+          <div id="tower-bedding-checks" class="tower-bedding-layers"></div>
+          <p class="tower-detail">跨度與荷載由候選配置取得。鋼材初估採 Fb＝0.60Fy、Fv＝0.40Fy，並檢查腹板深厚比。槽鋼須有防扭轉支承，鋼材側向穩定、局部承壓及接合仍須另行檢核。
+            <a href="https://www.nlma.gov.tw/uploads/files/91bbcbd01a38582e6c5b1f00dd367683.pdf" target="_blank" rel="noopener">鋼結構容許應力設計法第 7 章</a>
+          </p>
         </div>
         <p id="tower-wood-reference" class="tower-detail">實木預設值採普通結構材的順紋 E 與長期容許應力，可依實際材料等級及使用條件修改。
           <a href="https://www.nlma.gov.tw/uploads/files/c3069fb4ce95f330816455e1f10e5b11.pdf" target="_blank" rel="noopener">國土管理署規範第 4 章</a>
@@ -614,14 +596,14 @@
   <script src="scaffold-sucoot.js"></script>
   <script src="scaffold-viewer3d.js"></script>
   <script src="scaffold-3d-ui.js"></script>
-  <script src="tower-foundation.js"></script>
-  <script src="tower-sucoot-material-checks.js"></script>
-  <script src="tower-support.js"></script>
-  <script src="tower-report.js"></script>
-  <script src="tower-dxf-blocks.js"></script>
+  <script src="tower-foundation.js?v=20261127"></script>
+  <script src="tower-sucoot-material-checks.js?v=20261127b"></script>
+  <script src="tower-support.js?v=20261127b"></script>
+  <script src="tower-report.js?v=20261127b"></script>
+  <script src="tower-dxf-blocks.js?v=20261127e"></script>
   <script src="tower-dxf-template.js"></script>
-  <script src="tower-dxf.js"></script>
-  <script src="tower-foundation-ui.js"></script>
+  <script src="tower-dxf.js?v=20261127f"></script>
+  <script src="tower-foundation-ui.js?v=20261127d"></script>
   <script>
 (function (root) {
   'use strict';

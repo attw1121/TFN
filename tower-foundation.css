@@ -117,6 +117,16 @@
 .tower-material-fields .tower-detail { margin-top: 0; }
 .tower-material-label { font-size: 13px; font-weight: 700; }
 .tower-material-dimensions, .tower-material-properties { display: grid; gap: 8px; }
+.tower-material-fields [hidden] { display: none; }
+.tower-bedding-layers { display: grid; gap: 8px; list-style: none; margin: 0; padding: 0; }
+.tower-bedding-row { display: grid; gap: 8px; padding: 8px; background: var(--mist); border-radius: 6px; }
+.tower-bedding-row header { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+.tower-bedding-controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.tower-bedding-controls > label:only-of-type { grid-column: 1 / -1; }
+.tower-bedding-controls :is(input, select) { min-width: 0; width: 100%; }
+.tower-bedding-results { font-size: 13px; }
+.tower-bedding-results :is(th, td) { padding: 5px; }
+.tower-bedding-results :is(th, td):not(:first-child) { text-align: right; }
 .tower-material-dimensions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .tower-material-properties, .tower-material-results { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 [data-material="steel"] .tower-material-properties { grid-template-columns: repeat(2, minmax(0, 1fr)); }

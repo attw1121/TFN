@@ -76,7 +76,7 @@
   }
 
   function render(snapshot) {
-    const {shape, loads, materials = {}, layout, sideExtension, endExtension, platformPressure, warnings, materialMethod, endBayAtStart,
+    const {shape, loads, materials = {}, layout, sideExtension, endExtension, platformPressure, warnings, materialMethod, endBayAtStart, beddingResults,
       groundProfiles, figures, woodNames} = snapshot;
     const {concrete, impact, live, testLoad, safetyFactor, legsPerTestedFrame, legCapacity} = loads;
     const arms = layout.armFrames ?? [];
@@ -138,11 +138,12 @@
       formula('單支容許荷載 = ' + number(testLoad) + ' ÷ ' + number(safetyFactor) + ' ÷ ' + legsPerTestedFrame +
         ' = ' + quantity(legCapacity, 'tf／支')) +
       (leg ? heading('控制支腳 · ' + governingArm.arm + ' 梁，距井桶外壁 ' + number(leg.x * 1000) + ' mm') +
-        table(['分項', '分攤面積（m²）', '荷載（tf）'], [
+        table(['分項', '分攤面積（m²）', '荷載（tf）'], [...(leg.transferredLoad !== undefined
+          ? [['墊條逐層傳遞至支腳的反力', '—', number(leg.transferredLoad, true)]] : [
           ['混凝土自重', number(leg.beamArea, true), number(leg.beamArea * concrete * beamDepth, true)],
           ['澆注衝擊載重', number(leg.beamArea, true), number(leg.beamArea * impact, true)],
           ['人員、機具、模板活載重', number(leg.beamArea, true), number(leg.beamArea * live, true)],
-          ['平台延伸區載重', number(leg.extensionArea, true), number(leg.extensionArea * effectivePlatformPressure, true)],
+          ['平台延伸區載重', number(leg.extensionArea, true), number(leg.extensionArea * effectivePlatformPressure, true)]]),
           ['架材分攤自重', '—', number(leg.frameLoad, true)],
           ['單支估算荷載合計', '—', number(leg.load, true)]
         ]) +
@@ -177,37 +178,58 @@
           : notice('未檢核。請補齊輸入並取得支撐配置。')));
     }
 
-    const uniformFormulas = ['彎曲應力 fb = wL² ÷ (8Z)', '剪應力 fv = wL ÷ (2Av)',
-      '撓度 δ = 5wL⁴ ÷ (384EI)，上限 L/240'];
-    const referenceFormulas = limit => ['彎矩 M = wL² ÷ 10，彎曲應力 fb = M ÷ Z',
-      '剪應力 fv = wL ÷ (2A)', '撓度 δ = wL⁴ ÷ (128EI)，上限 ' + limit];
-    const overhang = '端部懸伸另以懸臂式 M = wL² ÷ 2、V = wL、δ = wL⁴ ÷ (8EI) 檢核。';
-    materialPage('board', '三、設計模板', '以 1 m 寬板帶檢核，板跨依木角材中心間距及梁底坡度換算。' +
-      (materialMethod ? '木角材中心間距依角材檢核結果與模板容許板跨決定。' : '木材採短期 Fb、Fv。'),
-      ['w 取梁身與平台面載重上限換算為 1 m 板帶線載重。',
-        ...(materialMethod ? referenceFormulas('0.30 cm') : uniformFormulas)],
-      ['採用線載重 w（kgf/cm）', '木角材中心間距（cm）'],
-      arm => [number(arm.screening.boardLine, true), number(arm.joistPitch * 100, true)]);
-    materialPage('timber', '四、設計次墊條（木角材）', '按梁身、側向延伸與端部延伸的分區荷載及懸伸段檢核。' +
-      (materialMethod ? '跨內面載重採該跨所涵蓋分區的最大值。' : '木材採短期 Fb、Fv。'),
-      [materialMethod ? '線載重 w = 面載重 × 木角材中心間距。' : '分區線載重 w = 各區面載重 × 木角材中心間距。',
-        ...(materialMethod ? [...referenceFormulas('L/240'), overhang] :
-          ['彎曲應力 = |M|max ÷ Z，剪應力 = |V|max ÷ Av。', '依分區載重與端部彎矩估算撓度上界，檢核上限為 L/240。'])],
-      ['木角材中心間距（cm）', '檢核線載重上限（kgf/cm）'],
-      arm => [number(arm.joistPitch * 100, true), number(arm.screening.timberLine, true)]);
-    const steelSlope = 'L 為水平支距按梁底坡度換算的型鋼跨度，Fb = 0.60Fy，Fv = 0.40Fy。';
-    materialPage('steel', '五、設計主墊條（H 型鋼）', '優先配置全梁常規架，其次試配下底座。各階段沿梁優先採用通過配置檢核的最大制式跨距。' +
-      (materialMethod ? '型鋼容許支距按選用配置的控制排分攤線載重計算。' : '型鋼容許支距依採用配置的控制排線載重及荷載包絡求得。'),
-      materialMethod
-        ? ['w 取各型鋼支撐排的最大分攤線載重。A = 型鋼總高 × 腹板厚。', steelSlope, ...referenceFormulas('0.30 cm'), overhang]
-        : ['w = 控制排分攤線載重 × 2(1 + 2s ÷ l)，l 為水平支距，s 取角材間距與兩端邊距的最大值。', steelSlope, ...uniformFormulas],
-      [...(materialMethod ? ['控制排線載重 w（kgf/cm）'] : ['控制排線載重（kgf/cm）', '包絡係數', '檢核線載重 w（kgf/cm）']),
-        '最大容許水平支距（m）', '採用最大水平支距（m）'],
-      arm => {
-        const line = Math.max(...arm.steelLineLoads) * 10;
-        return [number(line, true), ...(materialMethod ? [] : [number(arm.screening.steelFactor, true), number(line * arm.screening.steelFactor, true)]),
-          arm.steelSupportSpan === Infinity ? '無線載重' : number(arm.steelSupportSpan, true), number(arm.frameAlong.nominal, true)];
+    function referenceMaterialPages() {
+      const uniformFormulas = ['彎曲應力 fb = wL² ÷ (8Z)', '剪應力 fv = wL ÷ (2Av)',
+        '撓度 δ = 5wL⁴ ÷ (384EI)，上限 L/240'];
+      const referenceFormulas = limit => ['彎矩 M = wL² ÷ 10，彎曲應力 fb = M ÷ Z',
+        '剪應力 fv = wL ÷ (2A)', '撓度 δ = wL⁴ ÷ (128EI)，上限 ' + limit];
+      const overhang = '端部懸伸另以懸臂式 M = wL² ÷ 2、V = wL、δ = wL⁴ ÷ (8EI) 檢核。';
+      materialPage('board', '三、設計模板', '以 1 m 寬板帶檢核，板跨依木角材中心間距及梁底坡度換算。' +
+        (materialMethod ? '木角材中心間距依角材檢核結果與模板容許板跨決定。' : '木材採短期 Fb、Fv。'),
+        ['w 取梁身與平台面載重上限換算為 1 m 板帶線載重。',
+          ...(materialMethod ? referenceFormulas('0.30 cm') : uniformFormulas)],
+        ['採用線載重 w（kgf/cm）', '木角材中心間距（cm）'],
+        arm => [number(arm.screening.boardLine, true), number(arm.joistPitch * 100, true)]);
+      materialPage('timber', '四、設計次墊條（木角材）', '按梁身、側向延伸與端部延伸的分區荷載及懸伸段檢核。' +
+        (materialMethod ? '跨內面載重採該跨所涵蓋分區的最大值。' : '木材採短期 Fb、Fv。'),
+        [materialMethod ? '線載重 w = 面載重 × 木角材中心間距。' : '分區線載重 w = 各區面載重 × 木角材中心間距。',
+          ...(materialMethod ? [...referenceFormulas('L/240'), overhang] :
+            ['彎曲應力 = |M|max ÷ Z，剪應力 = |V|max ÷ Av。', '依分區載重與端部彎矩估算撓度上界，檢核上限為 L/240。'])],
+        ['木角材中心間距（cm）', '檢核線載重上限（kgf/cm）'],
+        arm => [number(arm.joistPitch * 100, true), number(arm.screening.timberLine, true)]);
+      const steelSlope = 'L 為水平支距按梁底坡度換算的型鋼跨度，Fb = 0.60Fy，Fv = 0.40Fy。';
+      materialPage('steel', '五、設計主墊條（H 型鋼）', '優先配置全梁常規架，其次試配下底座。各階段沿梁優先採用通過配置檢核的最大制式跨距。' +
+        (materialMethod ? '型鋼容許支距按選用配置的控制排分攤線載重計算。' : '型鋼容許支距依採用配置的控制排線載重及荷載包絡求得。'),
+        materialMethod
+          ? ['w 取各型鋼支撐排的最大分攤線載重。A = 型鋼總高 × 腹板厚。', steelSlope, ...referenceFormulas('0.30 cm'), overhang]
+          : ['w = 控制排分攤線載重 × 2(1 + 2s ÷ l)，l 為水平支距，s 取角材間距與兩端邊距的最大值。', steelSlope, ...uniformFormulas],
+        [...(materialMethod ? ['控制排線載重 w（kgf/cm）'] : ['控制排線載重（kgf/cm）', '包絡係數', '檢核線載重 w（kgf/cm）']),
+          '最大容許水平支距（m）', '採用最大水平支距（m）'],
+        arm => {
+          const line = Math.max(...arm.steelLineLoads) * 10;
+          return [number(line, true), ...(materialMethod ? [] : [number(arm.screening.steelFactor, true), number(line * arm.screening.steelFactor, true)]),
+            arm.steelSupportSpan === Infinity ? '無線載重' : number(arm.steelSupportSpan, true), number(arm.frameAlong.nominal, true)];
+        });
+    }
+    if (materials.layered || materials.beddingIssue) {
+      add('三、模板檢核', arms.length ? table(['梁號', '控制模板板跨（mm）'], arms.map(arm =>
+        [arm.arm, number(arm.bedding.boardGap * 1000, true)])) : notice(status));
+      (materials.layers ?? []).forEach((layer, i) => {
+        const results = beddingResults?.[i] ?? [];
+        add('第 ' + (i + 1) + ' 層墊條初檢（' + layer.name + '）',
+          paragraph(layer.directionName + '　' + layer.specification) +
+          table(['斷面項目', '數值'], [['Z（cm³）', number(layer.Z)], ['I（cm⁴）', number(layer.I)], ['A（cm²）', number(layer.A)]]) +
+          (results.length ? paragraph('依配置跨度及上下層傳遞的荷載檢核。') +
+            table(['梁號', '檢核項目', '跨度（mm）', '跨內荷載（tf）', '需求值', '容許值', '利用率（%）'], results.map(({arm, criterion, demand, limit, span, force, cantilever}) => {
+              const scale = criterion === '撓度' ? 10 : 1;
+              const unit = criterion === '撓度' ? 'mm' : 'kgf/cm²';
+              return [arm, (cantilever ? '懸臂 ' : '') + criterion, number(span * 1000), number(force), quantity(demand * scale, unit),
+                quantity(limit * scale, unit), number(demand / limit * 100)];
+            })) : notice(arms.length ? '本層由同向墊條連續承托，荷載直接傳至下層。' : '未完成檢核。')));
       });
+    } else {
+      referenceMaterialPages();
+    }
 
     add('圖說一　平面圖及 a–c、b–d 剖面', figure(figures.plan, '大梁編號與尺寸平面圖', 'plan') +
       '<div class="figure-grid">' + figure(figures['section-ac'], 'a–c 剖面') + figure(figures['section-bd'], 'b–d 剖面') + '</div>');
@@ -248,8 +270,9 @@
           .concat([['⑦ 梁全長', quantity(shape.length, 'mm')],
             ['兩側平台（每側）', quantity(sideExtension * 1000, 'mm')], ['梁端平台', quantity(endExtension * 1000, 'mm') +
               (endExtension && endBayAtStart ? '，增設短跨置於井桶側' : '')]])) +
-      heading('參、材料與配置') + table(['材料', '規格'],
-        [['模板', materialSpec.board], ['木角材', materialSpec.timber], ['H 型鋼', materialSpec.steel]]) +
+      heading('參、材料與配置') + table(['材料', '規格'], [['模板', materialSpec.board], ...(materials.layers
+        ? materials.layers.map((layer, i) => ['第 ' + (i + 1) + ' 層 ' + layer.name, layer.directionName + ' · ' + layer.specification])
+        : [['木角材', materialSpec.timber], ['H 型鋼', materialSpec.steel]])]) +
       notice(status) + '</section>';
     const pages = sections.map(({title, body}, i) =>
       '<section class="sheet"><div class="frame"><header class="running">DESIGN CALCULATION SHEET</header>' +
